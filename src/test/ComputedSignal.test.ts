@@ -15,6 +15,7 @@ describe("ComputedSignal", () => {
         const compute = vi.fn(() => value() * 2);
         const scope = new SignalScope().activate();
         const double = new ComputedSignal(compute);
+        scope.deactivate();
         const observer = vi.fn();
 
         // Initial call ob compute and observer

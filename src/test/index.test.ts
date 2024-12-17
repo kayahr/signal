@@ -8,7 +8,9 @@ import { describe, expect, it } from "vitest";
 import { BaseSignal, type BaseSignalOptions } from "../main/BaseSignal.js";
 import { type CallableSignal } from "../main/CallableSignal.js";
 import { computed, ComputedSignal, type ComputeFunction } from "../main/ComputedSignal.js";
+import { track, untracked } from "../main/Dependencies.js";
 import { type Destroyable } from "../main/Destroyable.js";
+import { type CleanupFunction, Effect, effect, type EffectFunction } from "../main/Effect.js";
 import { type EqualFunction } from "../main/EqualFunction.js";
 import * as exports from "../main/index.js";
 import { ObserverSignal, type ObserverSignalOptions, toSignal } from "../main/ObserverSignal.js";
@@ -23,16 +25,22 @@ describe("index", () => {
             BaseSignal,
             computed,
             ComputedSignal,
+            effect,
+            Effect,
             ObserverSignal,
             WritableSignal,
             signal,
             SignalScope,
-            toSignal
+            toSignal,
+            track,
+            untracked
         });
 
         // Interfaces and types can only be checked by TypeScript
         ((): BaseSignalOptions => (({} as exports.BaseSignalOptions)))();
         ((): CallableSignal => (({} as exports.CallableSignal)))();
+        ((): CleanupFunction => (({} as exports.CleanupFunction)))();
+        ((): EffectFunction => (({} as exports.EffectFunction)))();
         ((): ComputeFunction => (({} as exports.ComputeFunction)))();
         ((): Destroyable => (({} as exports.Destroyable)))();
         ((): ObserverSignalOptions => (({} as exports.ObserverSignalOptions)))();

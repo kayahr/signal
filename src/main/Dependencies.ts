@@ -40,11 +40,11 @@ export class Dependencies implements Destroyable {
     }
 
     /**
-     * Registers the given signal as dependency in the currently active dependency manager. Does nothing if currently not recording dependencies.
+     * Tracks the given signal as dependency in the current signal computation (if any).
      *
-     * @param signal - The signal to register.
+     * @param signal - The signal to track.
      */
-    public static registerSignal(signal: Signal): void {
+    public static track(signal: Signal): void {
         // TODO Use optional chaining when https://github.com/microsoft/TypeScript/issues/42734 is fixed
         const dependencies = this.#current;
         if (dependencies != null) {
@@ -120,4 +120,39 @@ export class Dependencies implements Destroyable {
         this.#signals.clear();
         this.#subscriptions.clear();
     }
+
+    /**
+     * Runs the given function or reads the given signal without dependency tracking.
+     *
+     * @param subject - Function to run or signal to read without tracking dependencies
+     * @returns The function result or signal value.
+     */
+    public static untracked<T>(subject: Signal<T> | (() => T)): T {
+        const old = this.#current;
+        this.#current = null;
+        try {
+            return subject instanceof Function ? subject() : subject.get();
+        } finally {
+            this.#current = old;
+        }
+    }
+}
+
+/**
+ * Runs the given function or reads the given signal without dependency tracking.
+ *
+ * @param subject - Function to run or signal to read without tracking dependencies
+ * @returns The function result or signal value.
+ */
+export function untracked<T>(subject: Signal<T> | (() => T)): T {
+    return Dependencies.untracked(subject);
+}
+
+/**
+ * Tracks the given signal as dependency in the current signal computation (if any).
+ *
+ * @param signal - The signal to track.
+ */
+export function track(signal: Signal): void {
+    Dependencies.track(signal);
 }

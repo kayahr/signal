@@ -18,7 +18,7 @@ const UNCOMPUTED = Symbol("@kayahr/signal/ComputedSignal#UNCOMPUTED");
  * A computed signal which calls the given compute function to update its value on demand. The compute function can read other signals. These signals are
  * dynamically recorded as dependencies so the computed signal is automatically updated when dependent signals report new values.
  */
-export class ComputedSignal<T> extends BaseSignal<T> implements Destroyable {
+export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destroyable {
     readonly #compute: ComputeFunction<T>;
     readonly #dependencies: Dependencies;
     #destroyed = false;

@@ -7,7 +7,7 @@ import { type Observable, type Observer, SharedObservable, type SubscriptionObse
 
 import { Callable } from "./Callable.js";
 import { type CallableSignal } from "./CallableSignal.js";
-import { Dependencies } from "./Dependencies.js";
+import { track } from "./Dependencies.js";
 import type { EqualFunction } from "./EqualFunction.js";
 
 /**
@@ -52,7 +52,7 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
 
     /** @inheritDoc */
     public get(): T {
-        Dependencies.registerSignal(this);
+        track(this);
         return this.#value;
     }
 
