@@ -16,15 +16,14 @@ describe("ObserverSignal", () => {
             next = v => observer.next(v);
             return () => { next = null; };
         });
-        const scope = new SignalScope();
-        SignalScope.setCurrent(scope);
+        const scope = new SignalScope().activate();
         const signal = ObserverSignal.from(observable, { initialValue: "init" });
         expect(signal.get()).toBe("init");
         next?.("test");
         expect(signal.get()).toBe("test");
         scope.destroy();
         expect(next).toBe(null);
-        expect(signal.get()).toBe("test");
+        expect(() => signal.get()).toThrowError(new Error("Observer signal has been destroyed"));
     });
 
     describe("from", () => {
@@ -58,7 +57,7 @@ describe("ObserverSignal", () => {
     });
 
     describe("destroy", () => {
-        it("unsubscribes from the observable", () => {
+        it("unsubscribes from the observable and marks signal as destroyed", () => {
             let next = null as ((v: string) => void) | null;
             const observable = new Observable<string>(observer => {
                 next = v => observer.next(v);
@@ -70,7 +69,7 @@ describe("ObserverSignal", () => {
             expect(signal.get()).toBe("test");
             signal.destroy();
             expect(next).toBe(null);
-            expect(signal.get()).toBe("test");
+            expect(() => signal.get()).toThrowError(new Error("Observer signal has been destroyed"));
         });
     });
 
@@ -88,6 +87,19 @@ describe("ObserverSignal", () => {
             expect(() => signal.get()).toThrowError(error);
             expect(() => signal.get()).toThrowError(error);
             expect(throwError).toBe(null);
+        });
+        it("returns last emitted value after observable completes", () => {
+            let complete = null as (() => void) | null;
+            const observable = new Observable<number>(observer => {
+                complete = () => observer.complete();
+                observer.next(53);
+                return () => { complete = null; };
+            });
+            const signal = ObserverSignal.from(observable, { requireSync: true });
+            expect(signal.get()).toBe(53);
+            complete?.();
+            expect(signal.get()).toBe(53);
+            expect(complete).toBe(null);
         });
     });
 });

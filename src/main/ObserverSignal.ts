@@ -6,6 +6,7 @@
 import type { Subscribable, Unsubscribable } from "@kayahr/observable";
 
 import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
+import type { Destroyable } from "./Destroyable.js";
 import { SignalScope } from "./SignalScope.js";
 
 /**
@@ -25,21 +26,21 @@ export interface ObserverSignalOptions<T = unknown> extends BaseSignalOptions<T>
 }
 
 /** Internally used default initial value to check if observable did emit a value synchronously. */
-const NONE = Symbol();
+const NONE = Symbol("@kayahr/signal/ObserverSignal#NONE");
 
 /**
  * Signal which observes the given observable.
  */
-export class ObserverSignal<T> extends BaseSignal<T> {
+export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
     #subscription: Unsubscribable | null = null;
     #error: Error | null = null;
+    #destroyed = false;
 
     private constructor(subscribable: Subscribable<T>, { requireSync = false, initialValue = NONE as T, ...options }: ObserverSignalOptions<T> = {}) {
         super(initialValue, options);
         this.#subscription = subscribable.subscribe(
             value => this.set(value),
-            error => { this.#error = error; },
-            () => this.destroy()
+            error => { this.#error = error; }
         );
         if (this.get() === NONE) {
             if (requireSync) {
@@ -48,7 +49,7 @@ export class ObserverSignal<T> extends BaseSignal<T> {
                 this.set(undefined as T);
             }
         }
-        SignalScope.getCurrent()?.registerDestroyable(this);
+        SignalScope.register(this);
     }
 
     public static from<T>(subscribable: Subscribable<T>, options: ObserverSignalOptions<T> & { initialValue: T }): ObserverSignal<T>;
@@ -78,7 +79,8 @@ export class ObserverSignal<T> extends BaseSignal<T> {
     public destroy(): void {
         this.#subscription?.unsubscribe();
         this.#subscription = null;
-        SignalScope.getCurrent()?.unregisterDestroyable(this);
+        this.set(NONE as T);
+        this.#destroyed = true;
     }
 
     /**
@@ -91,6 +93,8 @@ export class ObserverSignal<T> extends BaseSignal<T> {
     public override get(): T {
         if (this.#error != null) {
             throw this.#error;
+        } else if (this.#destroyed) {
+            throw new Error("Observer signal has been destroyed");
         }
         return super.get();
     }

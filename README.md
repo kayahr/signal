@@ -47,6 +47,46 @@ subscription.unsubscribe();
 signal.set(3); // Doesn't call observer because no longer subscribed
 ```
 
+### Computed signal
+
+A `ComputedSignal` computes its value on demand. Either when read synchronously and current value is outdated or was not computed yet at all, or immediately when observed and a dependent signal has changed.
+
+A computed signal can created via the `ComputedSignal` constructor or the `computed` function:
+
+```typescript
+import { computed, ComputedSignal } from "@kayahr/signal";
+
+const signal1 = computed(() => 1 + 2);
+const signal2 = new ComputedSignal(() => 1 + 2);
+```
+
+Computed signals dynamically record dependencies to other signals:
+
+```typescript
+const toggle = signal(true);
+const a = signal(1);
+const b = signal(2);
+const c = computed(() => toggle() ? a() : b());
+
+console.log(c());
+toggle.set(false);
+console.log(c());
+```
+
+While `toggle` is `true` the computed signal `c` does not depend on `b` because this part of the computation code was not executed. When `toggle` changes to `false` then the dependency on `a` is dropped because it is no longer needed and dependency on `b` is added.
+
+When a recorded dependency has changed then the compute function is re-evaluated the next time the computed value is read or must be emitted to subscribed observers.
+
+Because `ComputedSignal` subscribes to its dependencies the signal must be destroyed when no longer needed. This can be done automatically by using a signal scope (see later section) or manually by calling the `destroy()` method:
+
+```typescript
+const signal = computed(() => someOtherSignal());
+// ...
+signal.destroy();
+```
+
+When all related signals can be garbage-collected together then there is no need to destroy the signal.
+
 
 ### Observer signal
 
@@ -100,9 +140,9 @@ Simplified code example:
 import { SignalScope } from "@kayahr/signal";
 
 const scope = new SignalScope():
-SignalScope.setCurrent(scope);
+scope.activate();
 initSomeComponent(); // May create some signals
-SignalScope.setCurrent(null);
+scope.deactivate();
 
 runApplication();
 

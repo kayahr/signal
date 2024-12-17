@@ -7,7 +7,7 @@ import type { Destroyable } from "./Destroyable.js";
 
 /**
  * A signal scope which can be used by frameworks to automatically destroy registered destroyable signals when the scope is destroyed. A UI framework for
- * example can create a signal scope for a UI component, set it as current scope and then initialize the component calling the component constructor which
+ * example can create a signal scope for a UI component, set it as active scope and then initialize the component calling the component constructor which
  * might create signals which must be destroyed when component is destroyed. When the framework wants to destroy the component it can destroy the signal
  * scope to automatically destroy any signals created while this scope was active.
  */
@@ -19,49 +19,43 @@ export class SignalScope implements Destroyable {
     readonly #destroyables = new Set<Destroyable>();
 
     /**
-     * @returns The current signal scope or null if none.
+     * Activates this scope.
      */
-    public static getCurrent(): SignalScope | null {
-        return this.#current;
+    public activate(): this {
+        return SignalScope.#current = this;
     }
 
     /**
-     * Sets the currently active signal scope.
-     *
-     * @param scope - The scope to set as currently active or null to set none.
+     * Deactivates this scope if it is currently active.
      */
-    public static setCurrent(scope: SignalScope | null): void {
-        this.#current = scope;
+    public deactivate(): this {
+        if (SignalScope.#current === this) {
+            SignalScope.#current = null;
+        }
+        return this;
     }
 
     /**
-     * Registers the given destroyable object in this signal scope.
+     * Registers the given destroyable object in the current signal scope if present.
      *
      * @param destroyable - The destroyable object to register.
      */
-    public registerDestroyable(destroyable: Destroyable): void {
-        this.#destroyables.add(destroyable);
+    public static register(destroyable: Destroyable): void {
+        // TODO Use optional chaining when https://github.com/microsoft/TypeScript/issues/42734 is fixed
+        const current = this.#current;
+        if (current != null) {
+            current.#destroyables.add(destroyable);
+        }
     }
 
     /**
-     * Unregisters the given destroyable object from this signal scope.
-     *
-     * @param destroyable - The destroyable object to unregister.
-     */
-    public unregisterDestroyable(destroyable: Destroyable): void {
-        this.#destroyables.delete(destroyable);
-    }
-
-    /**
-     * Destroys this scope by destroying all registered objects and unsetting the scope as current scope if it is the current scope.
+     * Destroys this scope by destroying all registered destroyable objects and deactivating the scope if it is currently active.
      */
     public destroy(): void {
         for (const destroyable of this.#destroyables) {
             destroyable.destroy();
         }
         this.#destroyables.clear();
-        if (SignalScope.getCurrent() === this) {
-            SignalScope.setCurrent(null);
-        }
+        this.deactivate();
     }
 }

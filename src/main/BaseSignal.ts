@@ -7,14 +7,15 @@ import { type Observable, type Observer, SharedObservable, type SubscriptionObse
 
 import { Callable } from "./Callable.js";
 import { type CallableSignal } from "./CallableSignal.js";
-import type { EqualityFunction } from "./EqualityFunction.js";
+import { Dependencies } from "./Dependencies.js";
+import type { EqualFunction } from "./EqualFunction.js";
 
 /**
  * Base signal options.
  */
 export interface BaseSignalOptions<T = unknown> {
     /** Optional function to compare signal values. Defaults to `Object.is()`. */
-    equal?: EqualityFunction<T>;
+    equal?: EqualFunction<T>;
 }
 
 export interface BaseSignal<T = unknown> {
@@ -26,7 +27,7 @@ export interface BaseSignal<T = unknown> {
  * observability of it through in internally created shared observable.
  */
 export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements CallableSignal<T> {
-    readonly #equals: EqualityFunction<T>;
+    readonly #equals: EqualFunction<T>;
     readonly #observable: Observable<T>;
     #value: T;
     #observer: SubscriptionObserver<T> | null = null;
@@ -51,6 +52,7 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
 
     /** @inheritDoc */
     public get(): T {
+        Dependencies.registerSignal(this);
         return this.#value;
     }
 
@@ -70,7 +72,14 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     /** @inheritDoc */
     public subscribe(...args: [ Observer<T> ] | [ (value: T) => void, error?: (error: Error) => void, complete?: () => void ]): Unsubscribable {
         const observer = args[0] instanceof Function ? { next: args[0], error: args[1], complete: args[2] } : args[0];
-        observer.next?.(this.#value);
+        observer.next?.(this.get());
         return this.#observable.subscribe(...args);
+    }
+
+    /**
+     * @returns True if signal is observed (has subscribed observers) or false if not.
+     */
+    protected isObserved(): boolean {
+        return this.#observer != null;
     }
 }
