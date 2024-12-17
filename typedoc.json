@@ -9,5 +9,6 @@
     "excludePrivate": true,
     "excludeExternals": true,
     "treatWarningsAsErrors": true,
+    "validation": true,
     "gitRevision": "main"
 }
