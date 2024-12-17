@@ -1,0 +1,56 @@
+{
+    "$schema": "http://json.schemastore.org/package",
+    "name": "@kayahr/signal",
+    "version": "0.0.1",
+    "type": "module",
+    "description": "Standalone signal implementation",
+    "keywords": [
+        "observable",
+        "signal"
+    ],
+    "license": "MIT",
+    "author": "Klaus Reimer <k@ailis.de>",
+    "repository": "github:kayahr/signal",
+    "homepage": "https://github.com/kayahr/signal",
+    "bugs": "https://github.com/kayahr/signal/issues",
+    "funding": "https://github.com/kayahr/datastream?sponsor=1",
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "lib/main/",
+        "src/main/"
+    ],
+    "exports": "./lib/main/index.js",
+    "scripts": {
+        "clean": "rimraf lib",
+        "build": "run-s build:*",
+        "build:compile": "tsc",
+        "test": "run-s test:*",
+        "test:unit": "vitest run",
+        "test:lint": "eslint --max-warnings 0",
+        "test:apidoc": "typedoc --emit none",
+        "test:spell": "cspell --no-progress --no-summary",
+        "apidoc": "typedoc",
+        "install:browser": "playwright install chromium",
+        "prepare": "run-s install:browser clean build"
+    },
+    "devDependencies": {
+        "@kayahr/eslint-config": "3.1.0",
+        "@types/node": "22.10.2",
+        "@vitest/browser": "2.1.8",
+        "@vitest/coverage-v8": "2.1.8",
+        "cspell": "8.17.1",
+        "npm-run-all": "4.1.5",
+        "playwright": "1.49.1",
+        "rimraf": "6.0.1",
+        "source-map-support": "0.5.21",
+        "typedoc": "0.27.5",
+        "typescript": "5.7.2",
+        "vitest": "2.1.8"
+    },
+    "dependencies": {
+        "@kayahr/observable": "^1.0.1",
+        "tslib": "^2.8.1"
+    }
+}
