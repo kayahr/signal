@@ -169,3 +169,4 @@ const names = signal([ "Jane", "John" ], { equal: _.isEqual });
 [NPM]: https://www.npmjs.com/package/@kayahr/signal
 [Angular Signals]: https://angular.dev/guide/signals
 [Observable Values]: https://docs.oracle.com/javase/8/javafx/api/javafx/beans/value/ObservableValue.html
+[@kayahr/observable]: https://www.npmjs.com/package/@kayahr/observable
