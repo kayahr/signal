@@ -51,7 +51,7 @@ signal.set(3); // Doesn't call observer because no longer subscribed
 
 A `ComputedSignal` computes its value on demand. Either when read synchronously and current value is outdated or was not computed yet at all, or immediately when observed and a dependent signal has changed.
 
-A computed signal can created via the `ComputedSignal` constructor or the `computed` function:
+A computed signal can be created via the `ComputedSignal` constructor or the `computed` function:
 
 ```typescript
 import { computed, ComputedSignal } from "@kayahr/signal";
