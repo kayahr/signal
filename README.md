@@ -48,6 +48,69 @@ signal.set(3); // Doesn't call observer because no longer subscribed
 ```
 
 
+### Observer signal
+
+An `ObserverSignal` wraps any `Observable` into a signal and can be created via its static `from` method or with the `toSignal` function:
+
+```typescript
+import { ObserverSignal, toSignal } from "@kayahr/signal";
+
+const signal1 = ObserverSignal.from(observable);
+const signal2 = toSignal(observable);
+```
+
+If the observable does not emit a value synchronously on subscription then an initial value can be provided when creating the signal or otherwise the signal value will be initialized to `undefined`:
+
+```typescript
+const observable = new Observable<number>(...);
+const signal1 = toSignal(observable); // Type is `Signal<number | undefined>`
+const signal2 = toSignal(observable, { initialValue: 0 }); // Type is `Signal<number>`
+```
+
+If the observable does synchronously emit on subscription then no initial value is needed but this state must be explicitly defined by setting the `requireSync` option to `true`. By doing so the signal value is correctly inferred to be not `undefined` and an exception is thrown when the observable actually did not emit a value on subscription.
+
+```typescript
+const observable = new Observable<number>(...);
+const signal = toSignal(observable, { requireSync: true }); // Type is `Signal<number>`
+```
+
+Because `ObserverSignal` does immediately subscribe itself to the observable the signal must be destroyed when no longer needed. This can be done automatically by using a signal scope (see later section) or manually by calling the `destroy()` method:
+
+```typescript
+const signal = toSignal(observable);
+// ...
+signal.destroy();
+```
+
+When observable and signal can be garbage-collected together then there is no need to destroy the signal.
+
+
+### Signal Scope
+
+Signal scopes can be used by frameworks to support automatic destruction of signals which needs to be destructed (Like `ObserverSignal`). The workflow is pretty simple:
+
+* Create new Signal Scope for a specific application module (like a UI Component).
+* Set created signal scope as current scope.
+* Initialize application module. This might create signals which are then automatically associated with the current signal scope.
+* Destroy the signal scope when the application module is no longer needed. This destroys all signals which were created while this scope was active.
+
+Simplified code example:
+
+```typescript
+import { SignalScope } from "@kayahr/signal";
+
+const scope = new SignalScope():
+SignalScope.setCurrent(scope);
+initSomeComponent(); // May create some signals
+SignalScope.setCurrent(null);
+
+runApplication();
+
+destroyComponent();
+scope.destroy(); // Destroys all signals registered during component initialization
+```
+
+
 ## Custom equality check
 
 By default signal values are compared with the `Object.is()` function to determine if a value has actually changed. When you are using objects or arrays as values then you might need to specify a custom equality check, like the deep equals function provided by lodash. A custom equality check function can be passed to a signal via the `equal` signal option:
