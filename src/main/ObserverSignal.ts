@@ -79,7 +79,6 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
     public destroy(): void {
         this.#subscription?.unsubscribe();
         this.#subscription = null;
-        this.set(NONE as T);
         this.#destroyed = true;
     }
 
