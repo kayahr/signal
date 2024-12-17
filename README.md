@@ -1,5 +1,7 @@
 # Signal
 
+**!!! THIS PROJECT IS INCOMPLETE AND NOT READY FOR PRODUCTION YET !!!**
+
 [GitHub] | [NPM] | [API Doc]
 
 This is a standalone signal implementation inspired by [Angular Signals] (which API it closely follows) and JavaFX's [Observable Values]. This signal implementation is framework- and platform-agnostic (works in browsers and Node.js) and is simply based on observables for dependency watching.
