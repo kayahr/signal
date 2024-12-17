@@ -6,6 +6,8 @@
 
 This is a standalone signal implementation inspired by [Angular Signals] (which API it closely follows) and JavaFX's [Observable Values]. This signal implementation is framework- and platform-agnostic (works in browsers and Node.js) and is simply based on observables for dependency watching.
 
+The library is very small (around 3KB when minified) and only depends on the [@kayahr/observable] library which also is around 3 KB large.
+
 
 ## Writable signals
 
