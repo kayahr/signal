@@ -49,7 +49,7 @@ subscription.unsubscribe();
 signal.set(3); // Doesn't call observer because no longer subscribed
 ```
 
-### Computed signal
+### Computed signals
 
 A `ComputedSignal` computes its value on demand. Either when read synchronously and current value is outdated or was not computed yet at all, or immediately when observed and a dependent signal has changed.
 
@@ -90,9 +90,9 @@ signal.destroy();
 When all related signals can be garbage-collected together then there is no need to destroy the signal.
 
 
-### Observer signal
+### Observer signals
 
-An `ObserverSignal` wraps any `Observable` into a signal and can be created via its static `from` method or with the `toSignal` function:
+An `ObserverSignal` wraps any Observable/Subscribable-like object (providing a compatible `subscribe` method) into a signal and can be created via its static `from` method or with the `toSignal` function:
 
 ```typescript
 import { ObserverSignal, toSignal } from "@kayahr/signal";
@@ -129,11 +129,10 @@ When observable and signal can be garbage-collected together then there is no ne
 
 ### Signal Scope
 
-Signal scopes can be used by frameworks to support automatic destruction of signals which needs to be destructed (Like `ObserverSignal`). The workflow is pretty simple:
+Signal scopes can be used by frameworks to support automatic destruction of signals which needs to be destructed (Like `ObserverSignal` or `ComputedSignal`). The workflow is pretty simple:
 
-* Create new Signal Scope for a specific application module (like a UI Component).
-* Set created signal scope as current scope.
-* Initialize application module. This might create signals which are then automatically associated with the current signal scope.
+* Create new Signal Scope for a specific application module (like a UI Component) and activate it
+* Initialize application module. This might create signals which are then automatically associated with the currently active signal scope.
 * Destroy the signal scope when the application module is no longer needed. This destroys all signals which were created while this scope was active.
 
 Simplified code example:
