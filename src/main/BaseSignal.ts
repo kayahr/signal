@@ -17,7 +17,7 @@ export interface BaseSignalOptions<T = unknown> {
     equal?: EqualityFunction<T>;
 }
 
-export interface BaseSignal<T> {
+export interface BaseSignal<T = unknown> {
     (): T;
 }
 
@@ -25,7 +25,7 @@ export interface BaseSignal<T> {
  * Abstract base class for signal implementations managing the callability of the signal object and internal management of the signal value including the
  * observability of it through in internally created shared observable.
  */
-export abstract class BaseSignal<T> extends Callable<[], T> implements CallableSignal<T> {
+export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements CallableSignal<T> {
     readonly #equals: EqualityFunction<T>;
     readonly #observable: Observable<T>;
     #value: T;
@@ -54,6 +54,11 @@ export abstract class BaseSignal<T> extends Callable<[], T> implements CallableS
         return this.#value;
     }
 
+    /**
+     * Sets the value.
+     *
+     * @param value - The value to set.
+     */
     protected set(value: T): this {
         if (!this.#equals(value, this.#value)) {
             this.#value = value;
