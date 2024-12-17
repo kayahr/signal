@@ -5,10 +5,44 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { computed } from "../main/ComputedSignal.js";
+import { computed, ComputedSignal } from "../main/ComputedSignal.js";
+import { SignalScope } from "../main/SignalScope.js";
 import { signal } from "../main/WritableSignal.js";
 
 describe("ComputedSignal", () => {
+    it("is destroyed via signal scope if present", () => {
+        const value = signal(10);
+        const compute = vi.fn(() => value() * 2);
+        const scope = new SignalScope().activate();
+        const double = new ComputedSignal(compute);
+        const observer = vi.fn();
+
+        // Initial call ob compute and observer
+        double.subscribe(observer);
+        expect(compute).toHaveBeenCalledOnce();
+        expect(observer).toHaveBeenCalledOnce();
+        expect(observer).toHaveBeenCalledWith(20);
+        compute.mockClear();
+        observer.mockClear();
+
+        // Call of compute and observer on dependency change
+        value.set(1);
+        expect(compute).toHaveBeenCalledOnce();
+        expect(observer).toHaveBeenCalledOnce();
+        expect(observer).toHaveBeenCalledWith(2);
+        compute.mockClear();
+        observer.mockClear();
+
+        // No more calls when dependency changes after destroy
+        scope.destroy();
+        value.set(2);
+        expect(compute).not.toHaveBeenCalledOnce();
+        expect(observer).not.toHaveBeenCalledOnce();
+
+        // Getter no longer works after destruction
+        expect(() => double.get()).toThrowError(new Error("Computed signal has been destroyed"));
+    });
+
     it("updates the computed value immediately when observed", () => {
         const value = signal(1);
         const compute = vi.fn(() => value() * 2);
@@ -118,6 +152,40 @@ describe("ComputedSignal", () => {
             const b = computed((): number => c());
             const c = computed((): number => a());
             expect(() => b.get()).toThrowError(new Error("Circular dependency detected during computed signal computation"));
+        });
+    });
+
+    describe("destroy", () => {
+        it("destroys the signal", () => {
+            const value = signal(10);
+            const compute = vi.fn(() => value() * 2);
+            const double = new ComputedSignal(compute);
+            const observer = vi.fn();
+
+            // Initial call ob compute and observer
+            double.subscribe(observer);
+            expect(compute).toHaveBeenCalledOnce();
+            expect(observer).toHaveBeenCalledOnce();
+            expect(observer).toHaveBeenCalledWith(20);
+            compute.mockClear();
+            observer.mockClear();
+
+            // Call of compute and observer on dependency change
+            value.set(1);
+            expect(compute).toHaveBeenCalledOnce();
+            expect(observer).toHaveBeenCalledOnce();
+            expect(observer).toHaveBeenCalledWith(2);
+            compute.mockClear();
+            observer.mockClear();
+
+            // No more calls when dependency changes after destroy
+            double.destroy();
+            value.set(2);
+            expect(compute).not.toHaveBeenCalledOnce();
+            expect(observer).not.toHaveBeenCalledOnce();
+
+            // Getter no longer works after destruction
+            expect(() => double.get()).toThrowError(new Error("Computed signal has been destroyed"));
         });
     });
 });
