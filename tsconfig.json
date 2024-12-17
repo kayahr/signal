@@ -4,7 +4,6 @@
     "compilerOptions": {
         "declaration": true,
         "forceConsistentCasingInFileNames": true,
-        "importHelpers": true,
         "lib": [
             "ES2022",
             "DOM"
