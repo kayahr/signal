@@ -1,7 +1,5 @@
 # Signal
 
-**!!! THIS PROJECT IS INCOMPLETE AND NOT READY FOR PRODUCTION YET !!!**
-
 [GitHub] | [NPM] | [API Doc]
 
 This is a standalone signal implementation inspired by [Angular Signals] (which API it closely follows) and JavaFX's [Observable Values]. This signal implementation is framework- and platform-agnostic (works in browsers and Node.js) and is simply based on observables for dependency watching.
@@ -49,7 +47,7 @@ subscription.unsubscribe();
 signal.set(3); // Doesn't call observer because no longer subscribed
 ```
 
-### Computed signals
+## Computed signals
 
 A `ComputedSignal` computes its value on demand. Either when read synchronously and current value is outdated or was not computed yet at all, or immediately when observed and a dependent signal has changed.
 
@@ -90,7 +88,7 @@ signal.destroy();
 When all related signals can be garbage-collected together then there is no need to destroy the signal.
 
 
-### Observer signals
+## Observer signals
 
 An `ObserverSignal` wraps any Observable/Subscribable-like object (providing a compatible `subscribe` method) into a signal and can be created via its static `from` method or with the `toSignal` function:
 
@@ -127,9 +125,86 @@ signal.destroy();
 When observable and signal can be garbage-collected together then there is no need to destroy the signal.
 
 
-### Signal Scope
+## Effects
 
-Signal scopes can be used by frameworks to support automatic destruction of signals which needs to be destructed (Like `ObserverSignal` or `ComputedSignal`). The workflow is pretty simple:
+Effects are functions which are executed once immediately and then every time one of the signals read inside the effect function reports a new value. This is pretty much the same as an actively-observed Computed Value which does not return a value and only produces side-effects. Actually the Effect implementation simply uses a Computed Value internally exactly like this.
+
+An effect can either be created via the `Effect` constructor or the `effect` function:
+
+```typescript
+import { effect, Effect } from "@kayahr/signal";
+
+const userName = signal("John");
+
+new Effect(() => {
+    console.log("User Name:", userName());
+});
+
+effect(() => {
+    console.log("User Name:", userName());
+});
+
+userName.set("Jane"); // Both effects now output the new user name
+```
+
+Because `Effect` does actively subscribe to its dependencies the effect must be destroyed when no longer needed. This can be done automatically by using a signal scope (see later section) or manually by calling the `destroy()` method:
+
+```typescript
+const effectRef = effect(() => { ... });
+// ...
+effectRef.destroy();
+```
+
+When the effect and all its dependencies can be garbage-collected together then there is no need to destroy the effect.
+
+### Effect cleanup
+
+Effects may have asynchronous side-effects, like starting a timer or interval and it might be useful to cancel these operations before the effect function is executed again or when the effect is destroyed. To achieve this an effect function can return a cleanup function:
+
+```typescript
+const delay = signal(1000);
+
+effect(() => {
+    const interval = setInterval(() => { console.log(new Date()); }, delay());
+    return () => clearInterval(interval);
+});
+```
+
+The effect in this example outputs the current date every second. The interval delay can be controlled by the `delay` setting. Whenever the delay changes the cleanup function is called before the effect function is executed again. The cleanup function is also called when the effect is destroyed.
+
+
+## Prevent dependency tracking
+
+Sometimes it can be useful to read signal values without tracking the signal as a dependency. This can be achieved with the `untracked` function:
+
+```typescript
+import { untracked } from "@kayahr/signal";
+
+const user = signal("John");
+const date = signal(new Date());
+
+effect(() => {
+    console.log(`User ${user()} (Date: ${untracked(date)})`);
+});
+```
+
+This effect outputs the user and reacts an a changed user but does not track `date` as dependency so the effect is not executed again when `date` changes.
+
+Instead of wrapping a signal you can also wrap a whole function block with the `untracked` function:
+
+```typescript
+effect() => {
+    console.log("User:", user());
+    untracked(() => {
+        console.log("Date:", date());
+    });
+});
+```
+
+
+## Signal Scope
+
+Signal scopes can be used by frameworks to support automatic destruction of effects and signals which needs to be destructed (Like `ObserverSignal` or `ComputedSignal`). The workflow is pretty simple:
 
 * Create new Signal Scope for a specific application module (like a UI Component) and activate it
 * Initialize application module. This might create signals which are then automatically associated with the currently active signal scope.
