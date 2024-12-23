@@ -13,7 +13,7 @@
     "repository": "github:kayahr/signal",
     "homepage": "https://github.com/kayahr/signal",
     "bugs": "https://github.com/kayahr/signal/issues",
-    "funding": "https://github.com/kayahr/datastream?sponsor=1",
+    "funding": "https://github.com/kayahr/signal?sponsor=1",
     "publishConfig": {
         "access": "public"
     },
@@ -36,7 +36,7 @@
         "prepare": "run-s install:browser clean build"
     },
     "devDependencies": {
-        "@kayahr/eslint-config": "3.1.0",
+        "@kayahr/eslint-config": "3.2.0",
         "@types/node": "22.10.2",
         "@vitest/browser": "2.1.8",
         "@vitest/coverage-v8": "2.1.8",
@@ -51,6 +51,6 @@
         "vitest": "2.1.8"
     },
     "dependencies": {
-        "@kayahr/observable": "^1.0.1"
+        "@kayahr/observable": "^1.1.1"
     }
 }
