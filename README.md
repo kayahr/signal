@@ -226,6 +226,8 @@ destroyComponent();
 scope.destroy(); // Destroys all signals registered during component initialization
 ```
 
+Signal scopes can be hierarchical. When creating a new signal scope while another signal scope is active then the new signal scope is registered as child scope within the parent scope so it is destroyed when the parent scope is destroyed.
+
 
 ## Custom equality check
 

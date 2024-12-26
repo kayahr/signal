@@ -19,6 +19,16 @@ export class SignalScope implements Destroyable {
     readonly #destroyables = new Set<Destroyable>();
 
     /**
+     * Creates a new signal scope. When there is already an active signal scope then this already active scope is considered to be a parent scope and the new
+     * scope is registered in it as child scope so it is destroyed when the parent scope is destroyed.
+     *
+     * Note that creating a signal scope does not activate it. You have to do this yourself, it can be done it one line: `scope = new SignalScope().activate()`.
+     */
+    public constructor() {
+        SignalScope.register(this);
+    }
+
+    /**
      * Activates this scope.
      */
     public activate(): this {
