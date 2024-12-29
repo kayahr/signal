@@ -36,7 +36,7 @@
         "prepare": "run-s install:browser clean build"
     },
     "devDependencies": {
-        "@kayahr/eslint-config": "3.2.0",
+        "@kayahr/eslint-config": "3.3.0",
         "@types/node": "22.10.2",
         "@vitest/browser": "2.1.8",
         "@vitest/coverage-v8": "2.1.8",
@@ -46,7 +46,7 @@
         "rimraf": "6.0.1",
         "rxjs": "7.8.1",
         "source-map-support": "0.5.21",
-        "typedoc": "0.27.5",
+        "typedoc": "0.27.6",
         "typescript": "5.7.2",
         "vitest": "2.1.8"
     },
