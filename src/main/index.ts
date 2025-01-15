@@ -3,6 +3,7 @@
  * See LICENSE.md for licensing information
  */
 
+export { atomic } from "./atomic.js";
 export { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
 export { type CallableSignal } from "./CallableSignal.js";
 export { computed, ComputedSignal, type ComputeFunction } from "./ComputedSignal.js";

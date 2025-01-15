@@ -3,8 +3,9 @@
  * See LICENSE.md for licensing information
  */
 
-import { type Observable, type Observer, SharedObservable, type SubscriptionObserver, type Unsubscribable } from "@kayahr/observable";
+import { Observable, type Observer, SharedObservable, type SubscriptionObserver, type Unsubscribable } from "@kayahr/observable";
 
+import { getAtom } from "./atomic.js";
 import { Callable } from "./Callable.js";
 import { type CallableSignal } from "./CallableSignal.js";
 import { track } from "./Dependencies.js";
@@ -37,6 +38,7 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     readonly #observable: Observable<T>;
     #value: T;
     #observer: SubscriptionObserver<T> | null = null;
+    #paused = false;
     #version: number;
 
     /**
@@ -80,7 +82,24 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
                 this.#version++;
             }
             this.#value = value;
-            this.#observer?.next(value);
+            const atom = getAtom();
+            if (atom != null) {
+                // Atomic operation is active. Pause the signal (if not already done) and inform observers with
+                // current value as soon as the atomic operation completes
+                // console.log("atom detected");
+                if (!this.#paused) {
+                    this.#paused = true;
+                    atom.subscribe({
+                        complete: () => {
+                            this.#paused = false;
+                            this.#observer?.next(this.#value);
+                        }
+                    });
+                }
+            } else {
+                // No atomic operation active, inform observers immediately.
+                this.#observer?.next(value);
+            }
         }
         return this;
     }
