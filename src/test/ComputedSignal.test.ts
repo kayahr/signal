@@ -3,6 +3,8 @@
  * See LICENSE.md for licensing information
  */
 
+import "@kayahr/vitest-matchers";
+
 import { describe, expect, it, vi } from "vitest";
 
 import { computed, ComputedSignal } from "../main/ComputedSignal.js";
@@ -154,6 +156,30 @@ describe("ComputedSignal", () => {
             const c = computed((): number => a());
             expect(() => b.get()).toThrowError(new Error("Circular dependency detected during computed signal computation"));
         });
+        it("calls the compute function again after a dependency has changed but does not update the version when value is the same", () => {
+            const input = signal(1);
+            const compute = vi.fn(() => input() < 10);
+            const output = new ComputedSignal(compute);
+            expect(output.get()).toBe(true);
+            const version = output.getVersion();
+            expect(compute).toHaveBeenCalledOnce();
+            input.set(2);
+            expect(output.get()).toBe(true);
+            expect(compute).toHaveBeenCalledTimes(2);
+            expect(output.getVersion()).toBe(version);
+        });
+        it("calls the compute function again after a dependency has changed and increases the version when value has changed", () => {
+            const input = signal(1);
+            const compute = vi.fn(() => input() < 10);
+            const output = computed(compute);
+            expect(output.get()).toBe(true);
+            const version = output.getVersion();
+            expect(compute).toHaveBeenCalledOnce();
+            input.set(12);
+            expect(output.get()).toBe(false);
+            expect(compute).toHaveBeenCalledTimes(2);
+            expect(output.getVersion()).toBe(version + 1);
+        });
     });
 
     describe("destroy", () => {
@@ -188,5 +214,22 @@ describe("ComputedSignal", () => {
             // Getter no longer works after destruction
             expect(() => double.get()).toThrowError(new Error("Computed signal has been destroyed"));
         });
+    });
+
+    it("is garbage collected correctly when no longer referenced", async () => {
+        const a = signal(1);
+        const b = computed(() => a() * 2);
+        let c: ComputedSignal<number> | null = new ComputedSignal(() => a() + b());
+        expect(c()).toBe(3);
+        await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
+    });
+
+    it("is garbage collected correctly after last observer is unsubscribed", async () => {
+        const a = signal(1);
+        const b = computed(() => a() * 2);
+        let c: ComputedSignal<number> | null = new ComputedSignal(() => a() + b());
+        expect(c()).toBe(3);
+        c.subscribe(() => {}).unsubscribe();
+        await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
     });
 });
