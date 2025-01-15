@@ -240,6 +240,48 @@ const names = signal([ "Jane", "John" ], { equal: _.isEqual });
 ```
 
 
+## Atomic updates
+
+When effects or observed computed values have multiple dependencies then they are executed/re-evaluated multiple times when multiple dependencies are changed. This can be prevented by grouping dependency updates into an atomic operation:
+
+```typescript
+import { atomic, signal, effect } from "@kayahr/signal";
+
+const a = signal(1);
+const b = signal(2);
+
+effect(() => console.log(a() + b());
+
+// These updates will call the effect two times
+a.set(3);
+b.set(4);
+
+// These updates only call the effect once
+atomic(() => {
+    a.set(3);
+    b.set(4);
+});
+```
+
+Note that this only affects effects and asynchronous change notifications (signal observers). Synchronously fetching the current value from a computed signal always runs the computed function when a dependency has changed, even when the updates happened in an atomic operation:
+
+```ts
+const a = signal(1);
+const b = signal(2);
+const c = computed(() => a() + b());
+
+// Outputs initial value of c = 3
+c.subscribe(console.log);
+
+atomic(() => {
+    a.set(3);
+    console.log(c()); // Outputs new value of c = 5
+    b.set(4);
+    console.log(c()); // Outputs new value of c = 7
+});
+// After atomic operation subscriber on c is called once and outputs c = 7
+```
+
 [API Doc]: https://kayahr.github.io/signal/
 [GitHub]: https://github.com/kayahr/signal
 [NPM]: https://www.npmjs.com/package/@kayahr/signal

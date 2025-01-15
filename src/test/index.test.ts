@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import { atomic } from "../main/atomic.js";
 import { BaseSignal, type BaseSignalOptions } from "../main/BaseSignal.js";
 import { type CallableSignal } from "../main/CallableSignal.js";
 import { computed, ComputedSignal, type ComputeFunction } from "../main/ComputedSignal.js";
@@ -22,6 +23,7 @@ describe("index", () => {
     it("exports relevant types and functions and nothing more", () => {
         // Check classes and enums
         expect({ ...exports }).toEqual({
+            atomic,
             BaseSignal,
             computed,
             ComputedSignal,
