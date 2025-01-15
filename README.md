@@ -282,6 +282,8 @@ atomic(() => {
 // After atomic operation subscriber on c is called once and outputs c = 7
 ```
 
+Atomic operations can be nested. Change notifications are paused until the top-most atomic operation is finished.
+
 [API Doc]: https://kayahr.github.io/signal/
 [GitHub]: https://github.com/kayahr/signal
 [NPM]: https://www.npmjs.com/package/@kayahr/signal
