@@ -3,8 +3,11 @@
  * See LICENSE.md for licensing information
  */
 
+import "@kayahr/vitest-matchers";
+
 import { describe, expect, it, vi } from "vitest";
 
+import { computed } from "../main/ComputedSignal.js";
 import { signal, WritableSignal } from "../main/WritableSignal.js";
 
 describe("WritableSignal", () => {
@@ -182,6 +185,34 @@ describe("WritableSignal", () => {
             expect(signal.getVersion()).toBe(Number.MIN_SAFE_INTEGER);
             signal.set(3);
             expect(signal.getVersion()).toBe(Number.MIN_SAFE_INTEGER + 1);
+        });
+    });
+
+    describe("throttle option", () => {
+        it("can be used to throttle the observable", () => {
+            vi.useFakeTimers({ toFake: [ "setTimeout" ] });
+            try {
+                const value = signal(0, { throttle: 100 });
+                const subscriber = vi.fn();
+                value.subscribe(subscriber);
+                expect(subscriber).toHaveBeenCalledExactlyOnceWith(0);
+                subscriber.mockClear();
+                value.set(1);
+                value.set(2);
+                expect(subscriber).not.toHaveBeenCalled();
+                vi.advanceTimersByTime(100);
+                expect(subscriber).toHaveBeenCalledExactlyOnceWith(2);
+            } finally {
+                vi.useRealTimers();
+            }
+        });
+        it("does not affect synchronous getter calls", () => {
+            const value = signal(0, { throttle: 1000 });
+            const double = computed(() => value() * 2);
+            value.set(1);
+            expect(double()).toBe(2);
+            value.set(2);
+            expect(double()).toBe(4);
         });
     });
 });

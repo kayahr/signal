@@ -284,6 +284,24 @@ atomic(() => {
 
 Atomic operations can be nested. Change notifications are paused until the top-most atomic operation is finished.
 
+
+## Throttling
+
+The notification of signal observers can be optionally throttled with the `throttle` option. This can be useful for effects or actively observed computed signals which do expensive calculations:
+
+```ts
+const result = computed(() => doHeavyComputations(depA(), depB()), { throttle: 1000 }));
+
+effect(() => {
+    console.log("Latest result", result());
+});
+```
+
+If the dependencies `depA` and/or `depB` in this example are constantly changed, the computed signal `result` only emits change notifications once per second (1000 milliseconds) so the connected effect also only executes once per second.
+
+The throttling does not affect synchronous reading of the current value with the `get()` method. This will always execute the computation when dependency changes have invalidated the computed value.
+
+
 [API Doc]: https://kayahr.github.io/signal/
 [GitHub]: https://github.com/kayahr/signal
 [NPM]: https://www.npmjs.com/package/@kayahr/signal

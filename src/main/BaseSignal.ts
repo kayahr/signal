@@ -19,6 +19,12 @@ export interface BaseSignalOptions<T = unknown> {
     equal?: EqualFunction<T>;
 
     /**
+     * Optional number of milliseconds to throttle change notifications or null if throttling is disabled (default). This only affects subscribed observers,
+     * it does not influence the synchronous retrieval of the signal value via {@link Signal.get}.
+     */
+    throttle?: number | null;
+
+    /**
      * Optional initial signal value version. Defaults to 0. There is usually no need to set this. This option only exists to allow testing the version
      * number wrap in unit tests.
      */
@@ -41,17 +47,24 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     #paused = false;
     #version: number;
 
+    /** The observer notification throttle delay in milliseconds. Null if not throttled. */
+    readonly #throttle: number | null;
+
+    /** The handle of the currently running throttle timeout. */
+    #throttleTimeout: unknown = null;
+
     /**
      * Creates a new signal with the given initial value and options.
      *
      * @param initialValue - The initial signal value.
      * @param options      - The base signal options.
      */
-    public constructor(initialValue: T, { equal: equals = Object.is, version: initialVersion = 0 }: BaseSignalOptions<T> = {}) {
+    public constructor(initialValue: T, { equal: equals = Object.is, version: initialVersion = 0, throttle = null }: BaseSignalOptions<T> = {}) {
         super(() => this.get());
         this.#value = initialValue;
         this.#version = initialVersion;
         this.#equals = equals;
+        this.#throttle = throttle;
         this.#observable = new SharedObservable<T>(observer => {
             this.watch();
             this.#observer = observer;
@@ -66,6 +79,22 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     public get(): T {
         track(this);
         return this.#value;
+    }
+
+    /**
+     * Sends given value to subscribers. May be delayed when throttling is enabled.
+     *
+     * @param value - The value to submit.
+     */
+    #next(value: T): void {
+        if (this.#throttle == null) {
+            this.#observer?.next(value);
+        } else if (this.#throttleTimeout == null) {
+            this.#throttleTimeout = setTimeout(() => {
+                this.#throttleTimeout = null;
+                this.#observer?.next(this.get());
+            }, this.#throttle);
+        }
     }
 
     /**
@@ -92,13 +121,13 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
                     atom.subscribe({
                         complete: () => {
                             this.#paused = false;
-                            this.#observer?.next(this.#value);
+                            this.#next(this.#value);
                         }
                     });
                 }
             } else {
                 // No atomic operation active, inform observers immediately.
-                this.#observer?.next(value);
+                this.#next(value);
             }
         }
         return this;
