@@ -16,10 +16,10 @@ export class Dependencies {
     /** The owner of these dependencies. */
     private readonly owner: Signal;
 
-    /** The set of current dependencies. May change when values are used conditionally in a computation. */
+    /** The set of current dependencies. May change when signals are used conditionally in a computation. */
     private readonly dependencies = new Set<Dependency>();
 
-    /** Index mapping values to corresponding dependencies. */
+    /** Index mapping signals to corresponding dependencies. */
     private readonly index = new Map<Signal, Dependency>();
 
     /**
@@ -30,12 +30,6 @@ export class Dependencies {
 
     /** Flag indicating that dependencies are currently validating. During validation other validate calls are ignored. */
     private validating = false;
-
-    /**
-     * Increased on each recording and set to all found dependencies so after recording we can easily identify and remove dependencies
-     * which still have the old record version.
-     */
-    private recordVersion = 0;
 
     /**
      * Creates a new dependencies container for the given owner value.
@@ -125,10 +119,10 @@ export class Dependencies {
         } else {
             // Update existing dependency
             dependency.update();
-        }
 
-        // Update the record version to mark the dependency as still-used
-        dependency.updateRecordVersion(this.recordVersion);
+            // Mark the dependency as still in-use
+            dependency.setUsed(true);
+        }
     }
 
     /**
@@ -137,7 +131,7 @@ export class Dependencies {
      */
     private removeUnused(): void {
         for (const [ value, dependency ] of this.index) {
-            if (dependency.getRecordVersion() !== this.recordVersion) {
+            if (!dependency.isUsed()) {
                 this.index.delete(value);
                 this.dependencies.delete(dependency);
                 if (dependency.isWatched()) {
@@ -157,7 +151,7 @@ export class Dependencies {
     }
 
     /**
-     * Runs the given function and records all values used during this function execution as dependency.
+     * Runs the given function and records all signals used during this function execution as dependency.
      *
      * @param fn - The function to call.
      * @returns The function result.
@@ -168,7 +162,9 @@ export class Dependencies {
         }
         const previousDependencies = activeDependencies;
         activeDependencies = this;
-        ++this.recordVersion;
+
+        // Mark all dependencies as unused. Will be marked as used again if really used. The rest can be removed later.
+        this.dependencies.forEach(dependency => dependency.setUsed(false));
         this.#recording = true;
         try {
             return fn();
@@ -178,7 +174,6 @@ export class Dependencies {
             this.#recording = false;
         }
     }
-
 
     /**
      * Unsubscribes from all dependencies and removes them.

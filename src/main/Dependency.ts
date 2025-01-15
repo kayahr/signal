@@ -21,15 +21,15 @@ export class Dependency {
     #version: unknown;
 
     /**
-     * The record version which was current when the dependency was last used. When this diverges from the record version of the
-     * dependency list referencing this dependency then the dependency is no longer used and can be removed.
-     */
-    #recordVersion = 0;
-
-    /**
      * The active subscription monitoring signal changes. Only present when dependency is watched. Null otherwise.
      */
     #subscription: Unsubscribable | null = null;
+
+    /**
+     * True if this dependency is used, false if not. This is set to false by {@link setUsed} before dependency recording starts and is set to true
+     * by {@link markAsUsed} when it is found to be used during dependency recording.
+     */
+    #used = true;
 
     /**
      * @param signal - The dependency signal.
@@ -40,20 +40,19 @@ export class Dependency {
     }
 
     /**
-     * Updates the record version to indicate that the dependency is still in use.
+     * Updates the {@link used} flag before and during dependency recording.
      *
-     * @param recordVersion - The current record version to set.
+     * @param used - True to mark dependency as used, false to mark it as unused.
      */
-    public updateRecordVersion(recordVersion: number): void {
-        this.#recordVersion = recordVersion;
+    public setUsed(used: boolean): void {
+        this.#used = used;
     }
 
     /**
-     * @returns The last seen record version. When this diverges from the current record version then this dependency is no longer used
-     *          and can be removed.
+     * @returns True if dependency is used, false if not.
      */
-    public getRecordVersion(): number {
-        return this.#recordVersion;
+    public isUsed(): boolean {
+        return this.#used;
     }
 
     /**
@@ -73,8 +72,8 @@ export class Dependency {
      */
     public validate(): boolean {
         this.#signal.validate();
-        const valueVersion = this.#signal.getVersion();
-        if (valueVersion !== this.#version) {
+        const version = this.#signal.getVersion();
+        if (version !== this.#version) {
             this.update();
             return true;
         }
