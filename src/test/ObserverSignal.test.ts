@@ -102,6 +102,20 @@ describe("ObserverSignal", () => {
             expect(complete).toBe(null);
         });
     });
+    describe("isValid", () => {
+        it("returns true", () => {
+            const observable = new Observable<number>(observer => observer.next(1));
+            const signal = ObserverSignal.from(observable);
+            expect(signal.isValid()).toBe(true);
+        });
+    });
+    describe("validate", () => {
+        it("does nothing", () => {
+            const observable = new Observable<number>(observer => observer.next(1));
+            const signal = ObserverSignal.from(observable);
+            expect(() => signal.validate()).not.toThrow();
+        });
+    });
 });
 
 describe("toSignal", () => {

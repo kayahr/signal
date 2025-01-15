@@ -12,13 +12,30 @@ import type { Signal } from "../main/Signal.js";
 import { signal } from "../main/WritableSignal.js";
 
 class RxjsSignal<T> extends BehaviorSubject<T> implements Signal<T> {
+    #version = 0;
     public set(value: T): void {
+        this.#version++;
         this.next(value);
     }
 
     public get(): T {
         track(this);
         return this.getValue();
+    }
+
+    public getVersion(): number {
+        return this.#version;
+    }
+
+    public isValid(): boolean {
+        return true;
+    }
+
+    public validate(): void {
+    }
+
+    public isWatched(): boolean {
+        return true;
     }
 }
 
