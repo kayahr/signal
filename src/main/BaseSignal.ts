@@ -16,6 +16,12 @@ import type { EqualFunction } from "./EqualFunction.js";
 export interface BaseSignalOptions<T = unknown> {
     /** Optional function to compare signal values. Defaults to `Object.is()`. */
     equal?: EqualFunction<T>;
+
+    /**
+     * Optional initial signal value version. Defaults to 0. There is usually no need to set this. This option only exists to allow testing the version
+     * number wrap in unit tests.
+     */
+    version?: number;
 }
 
 export interface BaseSignal<T = unknown> {
@@ -31,6 +37,7 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     readonly #observable: Observable<T>;
     #value: T;
     #observer: SubscriptionObserver<T> | null = null;
+    #version: number;
 
     /**
      * Creates a new signal with the given initial value and options.
@@ -38,13 +45,16 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
      * @param initialValue - The initial signal value.
      * @param options      - The base signal options.
      */
-    public constructor(initialValue: T, { equal: equals = Object.is }: BaseSignalOptions<T> = {}) {
+    public constructor(initialValue: T, { equal: equals = Object.is, version: initialVersion = 0 }: BaseSignalOptions<T> = {}) {
         super(() => this.get());
         this.#value = initialValue;
+        this.#version = initialVersion;
         this.#equals = equals;
         this.#observable = new SharedObservable<T>(observer => {
+            this.watch();
             this.#observer = observer;
             return () => {
+                this.unwatch();
                 this.#observer = null;
             };
         });
@@ -57,12 +67,18 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     }
 
     /**
-     * Sets the value.
+     * Sets the value. Does nothing when new value equals the old one. If new value is different, then the signal version is increased and observers are
+     * informed.
      *
      * @param value - The value to set.
      */
     protected set(value: T): this {
         if (!this.#equals(value, this.#value)) {
+            if (this.#version === Number.MAX_SAFE_INTEGER) {
+                this.#version = Number.MIN_SAFE_INTEGER;
+            } else {
+                this.#version++;
+            }
             this.#value = value;
             this.#observer?.next(value);
         }
@@ -76,10 +92,32 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
         return this.#observable.subscribe(...args);
     }
 
-    /**
-     * @returns True if signal is observed (has subscribed observers) or false if not.
-     */
-    protected isObserved(): boolean {
+    /** @inheritDoc */
+    public isWatched(): boolean {
         return this.#observer != null;
     }
+
+    /** Called when first observer subscribes. */
+    protected watch(): void {};
+
+    /** Called when last observer unsubscribes. */
+    protected unwatch(): void {};
+
+   /**
+     * Returns the current signal value version. This version is incremented every time the signal value has really changed. The version starts by 0 and
+     * wraps to `Number.MIN_SAFE_INTEGER` when `Number.MAX_SAFE_INTEGER` is reached, allowing unique versions for eighteen quadrillion signal updates.
+     *
+     * @returns The current signal version.
+     */
+    public getVersion(): number {
+        return this.#version;
+    }
+
+    /** @inheritDoc */
+    public isValid(): boolean {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public validate(): void {}
 }

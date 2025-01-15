@@ -3,26 +3,24 @@
  * See LICENSE.md for licensing information
  */
 
-import type { Unsubscribable } from "@kayahr/observable";
-
-import type { Destroyable } from "./Destroyable.js";
+import { Dependency } from "./Dependency.js";
 import type { Signal } from "./Signal.js";
 
+/** The active dependencies used to record dependencies when a value is used during a computation. */
+let activeDependencies: Dependencies | null = null;
+
 /**
- * Dependency manager used internally in {@link ComputedSignal}.
+ * Manages the dependencies of a signal which has dependencies (like a {@link ComputedSignal}).
  */
-export class Dependencies implements Destroyable {
-    /** The current dependencies on which read signals do register itself during dependency recording. Null if not recording. */
-    static #current: Dependencies | null = null;
+export class Dependencies {
+    /** The owner of these dependencies. */
+    private readonly owner: Signal;
 
-    /** The set of signals recorded signals are added to during dependency recording. */
-    readonly #signals = new Set<Signal>();
+    /** The set of current dependencies. May change when values are used conditionally in a computation. */
+    private readonly dependencies = new Set<Dependency>();
 
-    /** Map with dependent signals and their subscriptions. */
-    readonly #subscriptions = new Map<Signal, Unsubscribable>();
-
-    /** Callback called when a recorded dependency reports a new value. */
-    readonly #onUpdate: () => void;
+    /** Index mapping values to corresponding dependencies. */
+    private readonly index = new Map<Signal, Dependency>();
 
     /**
      * Flag indicating if we are currently recording. Used to prevent calling the onUpdate callback during recording and also used to detect circular
@@ -30,13 +28,123 @@ export class Dependencies implements Destroyable {
      */
     #recording = false;
 
+    /** Flag indicating that dependencies are currently validating. During validation other validate calls are ignored. */
+    private validating = false;
+
     /**
-     * Creates a new dependency manager.
-     *
-     * @param onUpdate - Callback called when a recorded dependency reports a new value.
+     * Increased on each recording and set to all found dependencies so after recording we can easily identify and remove dependencies
+     * which still have the old record version.
      */
-    public constructor(onUpdate: () => void) {
-        this.#onUpdate = onUpdate;
+    private recordVersion = 0;
+
+    /**
+     * Creates a new dependencies container for the given owner value.
+     *
+     * @param owner - The value owning these dependencies.
+     */
+    public constructor(owner: Signal) {
+        this.owner = owner;
+    }
+
+    /**
+     * Starts watching the current dependencies. Whenever one of these dependencies sends a change notification then the getter of the owner is called to
+     * update the value and (if value changed) notify its observers.
+     */
+    public watch(): void {
+        // Call getter once to ensure that dependencies are registered
+        this.owner.get();
+
+        // Any change on a dependency must call the getter
+        for (const dependency of this.dependencies) {
+            dependency.watch(() => untracked(this.owner));
+        }
+    }
+
+    /**
+     * Stops watching the current dependencies.
+     */
+    public unwatch(): void {
+        for (const dependency of this.dependencies) {
+            dependency.unwatch();
+        }
+    }
+
+    /**
+     * Checks if the dependencies are valid.
+     *
+     * @returns True if all dependencies are valid, false if at least one is invalid.
+     */
+    public isValid(): boolean {
+        for (const dependency of this.dependencies) {
+            if (!dependency.isValid()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Validates the dependencies.
+     *
+     * @returns True if at least one of the validated dependencies has updated its value during validation.
+     */
+    public validate(): boolean {
+        let needUpdate = false;
+        if (!this.validating) {
+            this.validating = true;
+            try {
+                for (const dependency of this.index.values()) {
+                    if (dependency.validate()) {
+                        needUpdate = true;
+                    }
+                }
+            } finally {
+                this.validating = false;
+            }
+        }
+        return needUpdate;
+    }
+
+    /**
+     * Registers the given value as dependency.
+     *
+     * @param value - The value to register as dependency.
+     */
+    private register(value: Signal): void {
+        let dependency = this.index.get(value);
+        if (dependency == null) {
+            // Register new dependency
+            dependency = new Dependency(value);
+            this.dependencies.add(dependency);
+            this.index.set(value, dependency);
+
+            // When owner is watched then start watching this new dependency
+            if (this.owner.isWatched()) {
+                dependency.watch(() => untracked(this.owner));
+            }
+        } else {
+            // Update existing dependency
+            dependency.update();
+        }
+
+        // Update the record version to mark the dependency as still-used
+        dependency.updateRecordVersion(this.recordVersion);
+    }
+
+    /**
+     * Removes dependencies which are no longer used. This is called right after recording so used the record version of used dependencies must match
+     * the current record version. If not then a dependency is out-dated and must be removed and unwatched if necessary.
+     */
+    private removeUnused(): void {
+        for (const [ value, dependency ] of this.index) {
+            if (dependency.getRecordVersion() !== this.recordVersion) {
+                this.index.delete(value);
+                this.dependencies.delete(dependency);
+                if (dependency.isWatched()) {
+                    dependency.unwatch();
+                }
+            }
+        }
     }
 
     /**
@@ -44,81 +152,41 @@ export class Dependencies implements Destroyable {
      *
      * @param signal - The signal to track.
      */
-    public static track(signal: Signal): void {
-        // TODO Use optional chaining when https://github.com/microsoft/TypeScript/issues/42734 is fixed
-        const dependencies = this.#current;
-        if (dependencies != null) {
-            dependencies.#signals.add(signal);
-        }
+    public static track(value: Signal): void {
+        activeDependencies?.register(value);
     }
 
     /**
-     * Calls the given function and records all signals used in it as dependencies.
+     * Runs the given function and records all values used during this function execution as dependency.
      *
-     * @param fn - The function to call and record dependencies for.
-     * @returns The value returned by the given function.
+     * @param fn - The function to call.
+     * @returns The function result.
      */
     public record<T>(fn: () => T): T {
         if (this.#recording) {
             throw new Error("Circular dependency detected during computed signal computation");
         }
-        const old = Dependencies.#current;
-        Dependencies.#current = this;
+        const previousDependencies = activeDependencies;
+        activeDependencies = this;
+        ++this.recordVersion;
         this.#recording = true;
         try {
             return fn();
         } finally {
-            this.#syncSubscriptions();
-            Dependencies.#current = old;
+            activeDependencies = previousDependencies;
+            this.removeUnused();
             this.#recording = false;
         }
     }
 
-    /**
-     * Called when a dependency reports a new value. It calls the onUpdate callback if the dependency manager is not currently recording dependencies.
-     */
-    #update(): void {
-        if (!this.#recording) {
-            this.#onUpdate();
-        }
-    }
 
     /**
-     * Synchronizes the dependency subscriptions. Unsubscribes from all signals which are no longer dependencies and subscribes to new signals which are
-     * now recorded as dependencies.
+     * Unsubscribes from all dependencies and removes them.
      */
-    #syncSubscriptions(): void {
-        // Unsubscribe obsolete subscriptions
-        for (const [ signal, subscription ] of this.#subscriptions) {
-            if (!this.#signals.has(signal)) {
-                subscription.unsubscribe();
-                this.#subscriptions.delete(signal);
-            } else {
-                // Optimization: By removing the signal (which has not changed its dependency state) here we don't have to unnecessarily process
-                // it in the next for loop
-                this.#signals.delete(signal);
-            }
-        }
-
-        // Subscribe to new dependencies
-        for (const signal of this.#signals) {
-            if (!this.#subscriptions.has(signal)) {
-                const subscription = signal.subscribe(() => this.#update());
-                this.#subscriptions.set(signal, subscription);
-            }
-        }
-
-        // No longer needed. Will be filled again on next dependency recording.
-        this.#signals.clear();
-    }
-
-    /** @inheritDoc */
     public destroy(): void {
-        for (const subscription of this.#subscriptions.values()) {
-            subscription.unsubscribe();
-        }
-        this.#signals.clear();
-        this.#subscriptions.clear();
+        this.dependencies.forEach(dependency => dependency.destroy());
+        this.dependencies.clear();
+        this.index.clear();
     }
 
     /**
@@ -128,12 +196,12 @@ export class Dependencies implements Destroyable {
      * @returns The function result or signal value.
      */
     public static untracked<T>(subject: Signal<T> | (() => T)): T {
-        const old = this.#current;
-        this.#current = null;
+        const previousDependencies = activeDependencies;
+        activeDependencies = null;
         try {
             return subject instanceof Function ? subject() : subject.get();
         } finally {
-            this.#current = old;
+            activeDependencies = previousDependencies;
         }
     }
 }

@@ -137,6 +137,53 @@ describe("WritableSignal", () => {
             expect(fn).not.toHaveBeenCalled();
         });
     });
+    describe("getVersion", () => {
+        it("initially returns 0", () => {
+            const signal = new WritableSignal(5);
+            expect(signal.getVersion()).toBe(0);
+        });
+        it("returns initial version specified as option", () => {
+            const signal = new WritableSignal(0, { version: 123 });
+            expect(signal.getVersion()).toBe(123);
+        });
+        it("increments version when primitive value changes", () => {
+            const signal = new WritableSignal(5);
+            expect(signal.getVersion()).toBe(0);
+            signal.set(1);
+            expect(signal.getVersion()).toBe(1);
+            signal.set(2);
+            expect(signal.getVersion()).toBe(2);
+        });
+        it("increments version when object value with custom equality check changes", () => {
+            const signal = new WritableSignal({ v: 1 }, { equal: (a, b) => a.v === b.v });
+            expect(signal.getVersion()).toBe(0);
+            signal.set({ v: 2 });
+            expect(signal.getVersion()).toBe(1);
+            signal.set({ v: 3 });
+            expect(signal.getVersion()).toBe(2);
+        });
+        it("does not increase version when primitive value did not change", () => {
+            const signal = new WritableSignal(5);
+            expect(signal.getVersion()).toBe(0);
+            signal.set(5);
+            expect(signal.getVersion()).toBe(0);
+        });
+        it("does not increase version when object value with custom equality check did not change", () => {
+            const signal = new WritableSignal({ v: 1 }, { equal: (a, b) => a.v === b.v });
+            expect(signal.getVersion()).toBe(0);
+            signal.set({ v: 1 });
+            expect(signal.getVersion()).toBe(0);
+        });
+        it("wraps to min version when maximum version is reached", () => {
+            const signal = new WritableSignal(0, { version: Number.MAX_SAFE_INTEGER - 1 });
+            signal.set(1);
+            expect(signal.getVersion()).toBe(Number.MAX_SAFE_INTEGER);
+            signal.set(2);
+            expect(signal.getVersion()).toBe(Number.MIN_SAFE_INTEGER);
+            signal.set(3);
+            expect(signal.getVersion()).toBe(Number.MIN_SAFE_INTEGER + 1);
+        });
+    });
 });
 
 describe("signal", () => {
