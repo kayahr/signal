@@ -10,5 +10,8 @@
     "excludeExternals": true,
     "treatWarningsAsErrors": true,
     "validation": true,
+    "plugin": [
+        "typedoc-github-theme"
+    ],
     "gitRevision": "main"
 }
