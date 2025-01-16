@@ -8,6 +8,7 @@ import "@kayahr/vitest-matchers";
 import { describe, expect, it, vi } from "vitest";
 
 import { computed } from "../main/ComputedSignal.js";
+import { ReadonlySignal } from "../main/ReadonlySignal.js";
 import { signal, WritableSignal } from "../main/WritableSignal.js";
 
 describe("WritableSignal", () => {
@@ -185,6 +186,15 @@ describe("WritableSignal", () => {
             expect(signal.getVersion()).toBe(Number.MIN_SAFE_INTEGER);
             signal.set(3);
             expect(signal.getVersion()).toBe(Number.MIN_SAFE_INTEGER + 1);
+        });
+    });
+
+    describe("asReadonly", () => {
+        it("returns readonly wrapper", () => {
+            const value = new WritableSignal(2);
+            const ro = value.asReadonly();
+            expect(ro).toBeInstanceOf(ReadonlySignal);
+            expect(ro.get()).toBe(2);
         });
     });
 

@@ -12,6 +12,7 @@ export { type Destroyable } from "./Destroyable.js";
 export { type CleanupFunction, Effect, effect, type EffectFunction } from "./Effect.js";
 export { type EqualFunction } from "./EqualFunction.js";
 export { ObserverSignal, type ObserverSignalOptions, toSignal } from "./ObserverSignal.js";
+export { ReadonlySignal } from "./ReadonlySignal.js";
 export { type Signal } from "./Signal.js";
 export { SignalScope } from "./SignalScope.js";
 export { signal, WritableSignal } from "./WritableSignal.js";

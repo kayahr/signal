@@ -4,6 +4,7 @@
  */
 
 import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
+import { ReadonlySignal } from "./ReadonlySignal.js";
 
 /**
  * The most basic form of a signal which is just a container for a value providing read and write access to the value and allowing to monitor the value for
@@ -28,6 +29,13 @@ export class WritableSignal<T = unknown> extends BaseSignal<T> {
      */
     public update(updater: (currentValue: T) => T): this {
         return this.set(updater(this.get()));
+    }
+
+    /**
+     * @returns A readonly signal wrapping this signal.
+     */
+    public asReadonly(): ReadonlySignal<T> {
+        return new ReadonlySignal(this);
     }
 }
 

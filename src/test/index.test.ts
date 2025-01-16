@@ -15,6 +15,7 @@ import { type CleanupFunction, Effect, effect, type EffectFunction } from "../ma
 import { type EqualFunction } from "../main/EqualFunction.js";
 import * as exports from "../main/index.js";
 import { ObserverSignal, type ObserverSignalOptions, toSignal } from "../main/ObserverSignal.js";
+import { ReadonlySignal } from "../main/ReadonlySignal.js";
 import { type Signal } from "../main/Signal.js";
 import { SignalScope } from "../main/SignalScope.js";
 import { signal, WritableSignal } from "../main/WritableSignal.js";
@@ -30,6 +31,7 @@ describe("index", () => {
             effect,
             Effect,
             ObserverSignal,
+            ReadonlySignal,
             WritableSignal,
             signal,
             SignalScope,

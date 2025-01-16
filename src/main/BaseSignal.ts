@@ -31,10 +31,6 @@ export interface BaseSignalOptions<T = unknown> {
     version?: number;
 }
 
-export interface BaseSignal<T = unknown> {
-    (): T;
-}
-
 /**
  * Abstract base class for signal implementations managing the callability of the signal object and internal management of the signal value including the
  * observability of it through in internally created shared observable.
@@ -134,10 +130,10 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     }
 
     /** @inheritDoc */
-    public subscribe(...args: [ Observer<T> ] | [ (value: T) => void, error?: (error: Error) => void, complete?: () => void ]): Unsubscribable {
-        const observer = args[0] instanceof Function ? { next: args[0], error: args[1], complete: args[2] } : args[0];
-        observer.next?.(this.get());
-        return this.#observable.subscribe(...args);
+    public subscribe(observer: Observer<T> | ((value: T) => void)): Unsubscribable {
+        const next = observer instanceof Function ? observer : observer.next;
+        next?.(this.get());
+        return this.#observable.subscribe(next);
     }
 
     /** @inheritDoc */
