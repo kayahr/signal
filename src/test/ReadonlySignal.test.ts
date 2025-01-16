@@ -3,8 +3,10 @@
  * See LICENSE.md for licensing information
  */
 
+import "symbol-observable";
 import "@kayahr/vitest-matchers";
 
+import { from } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 
 import { ReadonlySignal } from "../main/ReadonlySignal.js";
@@ -69,5 +71,15 @@ describe("ReadonlySignal", () => {
             b.validate();
             expect(spy).toHaveBeenCalledOnce();
         });
+    });
+    it("can be observed via RxJS for changes on the wrapped value", () => {
+        const base = new WritableSignal(10);
+        const signal = base.asReadonly();
+        const fn = vi.fn();
+        from(signal).subscribe(fn);
+        expect(fn).toHaveBeenCalledExactlyOnceWith(10);
+        fn.mockClear();
+        base.set(20);
+        expect(fn).toHaveBeenCalledExactlyOnceWith(20);
     });
 });

@@ -3,7 +3,9 @@
  * See LICENSE.md for licensing information
  */
 
-import type { Observer, Unsubscribable } from "@kayahr/observable";
+import "symbol-observable";
+
+import type { InteropSubscribable, Observer, Unsubscribable } from "@kayahr/observable";
 
 import { Callable } from "./Callable.js";
 import type { CallableSignal } from "./CallableSignal.js";
@@ -21,8 +23,13 @@ export class ReadonlySignal<T = unknown> extends Callable<[], T> implements Call
     }
 
     /** @inheritDoc */
-    public subscribe(observer: Observer<T> | ((value: T) => void)): Unsubscribable {
+    public subscribe(observer: Observer<T> | ((next: T) => void)): Unsubscribable {
         return this.#signal.subscribe(observer);
+    }
+
+    /** @inheritDoc */
+    public [Symbol.observable](): InteropSubscribable<T> {
+        return this;
     }
 
     /** @inheritDoc */

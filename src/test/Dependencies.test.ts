@@ -3,6 +3,8 @@
  * See LICENSE.md for licensing information
  */
 
+import "symbol-observable";
+
 import { BehaviorSubject } from "rxjs";
 import { describe, expect, it } from "vitest";
 
@@ -16,6 +18,10 @@ class RxjsSignal<T> extends BehaviorSubject<T> implements Signal<T> {
     public set(value: T): void {
         this.#version++;
         this.next(value);
+    }
+
+    public [Symbol.observable](): this {
+        return this;
     }
 
     public get(): T {

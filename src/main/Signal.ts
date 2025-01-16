@@ -3,12 +3,20 @@
  * See LICENSE.md for licensing information
  */
 
-import type { Subscribable } from "@kayahr/observable";
+import type { InteropObservable, Observer, Unsubscribable } from "@kayahr/observable";
 
 /**
  * Base signal interface with read-only access to the signal value. It is subscribable and must emit the current value directly on subscription.
  */
-export interface Signal<T = unknown> extends Subscribable<T> {
+export interface Signal<T = unknown> extends InteropObservable<T> {
+    /**
+     * Subscribes the given observer to this object.
+     *
+     * @param observer - The observer to subscribe.
+     * @return Object which can be used to unsubscribe the observer.
+     */
+    subscribe(observer: Observer<T> | ((next: T) => void)): Unsubscribable;
+
     /**
      * @returns The current signal value.
      */

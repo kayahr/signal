@@ -3,7 +3,9 @@
  * See LICENSE.md for licensing information
  */
 
-import { Observable, type Observer, SharedObservable, type SubscriptionObserver, type Unsubscribable } from "@kayahr/observable";
+import "symbol-observable";
+
+import { type InteropSubscribable, Observable, type Observer, SharedObservable, type Subscription, type SubscriptionObserver } from "@kayahr/observable";
 
 import { getAtom } from "./atomic.js";
 import { Callable } from "./Callable.js";
@@ -130,10 +132,15 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     }
 
     /** @inheritDoc */
-    public subscribe(observer: Observer<T> | ((value: T) => void)): Unsubscribable {
-        const next = observer instanceof Function ? observer : observer.next;
-        next?.(this.get());
-        return this.#observable.subscribe(next);
+    public subscribe(observer: Observer<T> | ((next: T) => void)): Subscription {
+        observer = observer instanceof Function ? { next: observer } : observer;
+        observer?.next?.(this.get());
+        return this.#observable.subscribe(observer);
+    }
+
+    /** @inheritDoc */
+    public [Symbol.observable](): InteropSubscribable<T> {
+        return this;
     }
 
     /** @inheritDoc */

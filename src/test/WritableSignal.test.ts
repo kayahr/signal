@@ -3,8 +3,10 @@
  * See LICENSE.md for licensing information
  */
 
+import "symbol-observable";
 import "@kayahr/vitest-matchers";
 
+import { from } from "rxjs";
 import { describe, expect, it, vi } from "vitest";
 
 import { computed } from "../main/ComputedSignal.js";
@@ -224,6 +226,16 @@ describe("WritableSignal", () => {
             value.set(2);
             expect(double()).toBe(4);
         });
+    });
+
+    it("can be observed via RxJS for changes on the wrapped value", () => {
+        const signal = new WritableSignal(10);
+        const fn = vi.fn();
+        from(signal).subscribe(fn);
+        expect(fn).toHaveBeenCalledExactlyOnceWith(10);
+        fn.mockClear();
+        signal.set(20);
+        expect(fn).toHaveBeenCalledExactlyOnceWith(20);
     });
 });
 
