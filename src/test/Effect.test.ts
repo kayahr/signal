@@ -3,8 +3,11 @@
  * See LICENSE.md for licensing information
  */
 
+import "@kayahr/vitest-matchers";
+
 import { describe, expect, it, vi } from "vitest";
 
+import { computed } from "../main/ComputedSignal.js";
 import { Effect, effect } from "../main/Effect.js";
 import { SignalScope } from "../main/SignalScope.js";
 import { signal } from "../main/WritableSignal.js";
@@ -42,7 +45,25 @@ describe("Effect", () => {
         expect(fn).toHaveBeenCalledWith(20);
     });
 
-    it("is executed on every dependency change", () => {
+    it("is executed on every sub dependency change", () => {
+        const a = signal({});
+        const b = computed(() => a());
+        const fn = vi.fn();
+        effect(() => { fn(b()); });
+        expect(fn).toHaveBeenCalledOnce();
+        expect(fn.mock.calls[0]).toEqual([ {} ]);
+        fn.mockClear();
+        a.set({ a: 1 });
+        expect(fn).toHaveBeenCalledOnce();
+        expect(fn.mock.calls[0]).toEqual([ { a: 1 } ]);
+        fn.mockClear();
+        a.set({ b: 2 });
+        expect(fn).toHaveBeenCalledOnce();
+        expect(fn.mock.calls[0]).toEqual([ { b: 2 } ]);
+        fn.mockClear();
+    });
+
+    it("is executed on every dependency change with multiple dynamic dependencies", () => {
         const toggle = signal(true);
         const a = signal(1);
         const b = signal(2);

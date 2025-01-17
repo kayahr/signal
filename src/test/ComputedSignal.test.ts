@@ -86,6 +86,26 @@ describe("ComputedSignal", () => {
         expect(observer2).toHaveBeenCalledWith(4);
     });
 
+    it("can observe changes over multiple levels", () => {
+        const a = signal(1);
+        const b = computed(() => a());
+        const c = computed(() => b());
+        const d = computed(() => c());
+        const e = computed(() => d());
+        const fn = vi.fn();
+        e.subscribe(fn);
+        expect(fn).toHaveBeenCalledExactlyOnceWith(1);
+        fn.mockClear();
+
+        a.set(2);
+        expect(fn).toHaveBeenCalledExactlyOnceWith(2);
+        fn.mockClear();
+
+        a.set(3);
+        expect(fn).toHaveBeenCalledExactlyOnceWith(3);
+        fn.mockClear();
+    });
+
     it("tracks its dependencies dynamically", () => {
         const toggle = signal(true);
         const a = signal(1);

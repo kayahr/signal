@@ -44,11 +44,10 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
         this.#dependencies.unwatch();
     }
 
-    #update(): T {
+    #update(): void {
         const value = this.#dependencies.record(() => this.#compute());
         this.#initialized = true;
         this.set(value);
-        return value;
     }
 
     /** @inheritDoc */
@@ -58,7 +57,7 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
         }
         if (!this.#initialized) {
             // Value has not been computed before, so initialize it now
-            return this.#update();
+            this.#update();
         } else if (!this.isValid()) {
             // Value is no longer valid, validate it and fetch it
             this.validate();
