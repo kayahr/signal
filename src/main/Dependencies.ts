@@ -6,7 +6,7 @@
 import { Dependency } from "./Dependency.js";
 import type { Signal } from "./Signal.js";
 
-/** The active dependencies used to record dependencies when a value is used during a computation. */
+/** The active dependencies used to record dependencies when a signal is used during a computation. */
 let activeDependencies: Dependencies | null = null;
 
 /**
@@ -32,9 +32,9 @@ export class Dependencies {
     private validating = false;
 
     /**
-     * Creates a new dependencies container for the given owner value.
+     * Creates a new dependencies container for the given owner signal.
      *
-     * @param owner - The value owning these dependencies.
+     * @param owner - The signal owning these dependencies.
      */
     public constructor(owner: Signal) {
         this.owner = owner;
@@ -100,17 +100,17 @@ export class Dependencies {
     }
 
     /**
-     * Registers the given value as dependency.
+     * Registers the given signal as dependency.
      *
-     * @param value - The value to register as dependency.
+     * @param signal - The signal to register as dependency.
      */
-    private register(value: Signal): void {
-        let dependency = this.index.get(value);
+    private register(signal: Signal): void {
+        let dependency = this.index.get(signal);
         if (dependency == null) {
             // Register new dependency
-            dependency = new Dependency(value);
+            dependency = new Dependency(signal);
             this.dependencies.add(dependency);
-            this.index.set(value, dependency);
+            this.index.set(signal, dependency);
 
             // When owner is watched then start watching this new dependency
             if (this.owner.isWatched()) {
@@ -126,13 +126,13 @@ export class Dependencies {
     }
 
     /**
-     * Removes dependencies which are no longer used. This is called right after recording so used the record version of used dependencies must match
-     * the current record version. If not then a dependency is out-dated and must be removed and unwatched if necessary.
+     * Removes dependencies which are no longer used. This is called right after recording so used flag on recorded dependencies will be set. If not then a
+     * dependency is out-dated and must be removed and unwatched if necessary.
      */
     private removeUnused(): void {
-        for (const [ value, dependency ] of this.index) {
+        for (const [ signal, dependency ] of this.index) {
             if (!dependency.isUsed()) {
-                this.index.delete(value);
+                this.index.delete(signal);
                 this.dependencies.delete(dependency);
                 if (dependency.isWatched()) {
                     dependency.unwatch();
@@ -146,8 +146,8 @@ export class Dependencies {
      *
      * @param signal - The signal to track.
      */
-    public static track(value: Signal): void {
-        activeDependencies?.register(value);
+    public static track(signal: Signal): void {
+        activeDependencies?.register(signal);
     }
 
     /**
