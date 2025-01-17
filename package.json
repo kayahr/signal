@@ -39,8 +39,8 @@
         "@kayahr/eslint-config": "3.3.0",
         "@kayahr/vitest-matchers": "1.1.0",
         "@types/node": "22.10.7",
-        "@vitest/browser": "2.1.8",
-        "@vitest/coverage-v8": "2.1.8",
+        "@vitest/browser": "3.0.2",
+        "@vitest/coverage-v8": "3.0.2",
         "cspell": "8.17.2",
         "npm-run-all": "4.1.5",
         "playwright": "1.49.1",
@@ -50,7 +50,7 @@
         "typedoc": "0.27.6",
         "typedoc-github-theme": "0.2.1",
         "typescript": "5.7.3",
-        "vitest": "2.1.8"
+        "vitest": "3.0.2"
     },
     "dependencies": {
         "@kayahr/observable": "^1.1.4",
