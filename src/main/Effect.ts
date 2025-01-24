@@ -40,7 +40,7 @@ export class Effect implements Destroyable {
             this.#cleanup = fn() ?? null;
         });
         this.#subscription = this.#signal.subscribe(() => {});
-        SignalScope.register(this);
+        SignalScope.registerDestroyable(this);
     }
 
     /**

@@ -16,8 +16,8 @@ describe("ObserverSignal", () => {
             next = v => observer.next(v);
             return () => { next = null; };
         });
-        const scope = new SignalScope().activate();
-        const signal = ObserverSignal.from(observable, { initialValue: "init" });
+        const scope = new SignalScope();
+        const signal = scope.runInScope(() => ObserverSignal.from(observable, { initialValue: "init" }));
         expect(signal.get()).toBe("init");
         next?.("test");
         expect(signal.get()).toBe("test");

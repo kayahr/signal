@@ -49,7 +49,7 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
                 this.set(undefined as T);
             }
         }
-        SignalScope.register(this);
+        SignalScope.registerDestroyable(this);
     }
 
     public static from<T>(subscribable: Subscribable<T>, options: ObserverSignalOptions<T> & { initialValue: T }): ObserverSignal<T>;

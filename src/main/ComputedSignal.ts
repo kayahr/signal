@@ -31,7 +31,7 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
         super(null as T, options);
         this.#dependencies = new Dependencies(this);
         this.#compute = compute;
-        SignalScope.register(this);
+        SignalScope.registerDestroyable(this);
     }
 
     /** @inheritDoc */

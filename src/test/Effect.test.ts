@@ -16,9 +16,8 @@ describe("Effect", () => {
     it("is destroyed via signal scope if present", () => {
         const value = signal(10);
         const fn = vi.fn((a: number) => {});
-        const scope = new SignalScope().activate();
-        new Effect(() => fn(value() * 2));
-        scope.deactivate();
+        const scope = new SignalScope();
+        scope.runInScope(() => new Effect(() => fn(value() * 2)));
 
         // Initial call ob compute and observer
         expect(fn).toHaveBeenCalledOnce();

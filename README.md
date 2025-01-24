@@ -204,8 +204,8 @@ effect() => {
 
 Signal scopes can be used by frameworks to support automatic destruction of effects and signals which needs to be destructed (Like `ObserverSignal` or `ComputedSignal`). The workflow is pretty simple:
 
-* Create new Signal Scope for a specific application module (like a UI Component) and activate it
-* Initialize application module. This might create signals which are then automatically associated with the currently active signal scope.
+* Create new Signal Scope for a specific application module (like a UI Component)
+* Run application initialization code within the context by using `scope.runInContext(fn)`. This might create signals which are then automatically associated with the currently active signal scope.
 * Destroy the signal scope when the application module is no longer needed. This destroys all signals which were created while this scope was active.
 
 Simplified code example:
@@ -214,9 +214,7 @@ Simplified code example:
 import { SignalScope } from "@kayahr/signal";
 
 const scope = new SignalScope():
-scope.activate();
-initSomeComponent(); // May create some signals
-scope.deactivate();
+scope.runInContext(() => initSomeComponent()); // May create some signals
 
 runApplication();
 
