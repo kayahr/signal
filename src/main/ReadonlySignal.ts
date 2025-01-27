@@ -15,8 +15,14 @@ import type { Signal } from "./Signal.js";
  * Readonly wrapper for a signal.
  */
 export class ReadonlySignal<T = unknown> extends Callable<[], T> implements CallableSignal<T> {
+    /** The wrapped signal. */
     readonly #signal: Signal<T>;
 
+    /**
+     * Creates new readonly wrapper for the given signal.
+     *
+     * @param signal - The signal to wrap.
+     */
     public constructor(signal: Signal<T>) {
         super(() => this.get());
         this.#signal = signal;

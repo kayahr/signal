@@ -18,6 +18,7 @@ export class Callable<T extends unknown[] = unknown[], R = unknown> extends Func
      */
     public constructor(func: (...args: T) => R) {
         super();
-        return Object.setPrototypeOf(func, new.target.prototype) as typeof this;
+        const a = Object.setPrototypeOf(func, new.target.prototype) as typeof this;
+        return a;
     }
 }

@@ -6,6 +6,7 @@
         "forceConsistentCasingInFileNames": true,
         "lib": [
             "ES2022",
+            "ES2022.Array",
             "DOM"
         ],
         "module": "NodeNext",

@@ -15,9 +15,11 @@ import { type CleanupFunction, Effect, effect, type EffectFunction } from "../ma
 import { type EqualFunction } from "../main/EqualFunction.js";
 import * as exports from "../main/index.js";
 import { ObserverSignal, type ObserverSignalOptions, toSignal } from "../main/ObserverSignal.js";
+import { ReadonlyArraySignal } from "../main/ReadonlyArraySignal.js";
 import { ReadonlySignal } from "../main/ReadonlySignal.js";
 import { type Signal } from "../main/Signal.js";
 import { SignalScope } from "../main/SignalScope.js";
+import { arraySignal, WritableArraySignal } from "../main/WritableArraySignal.js";
 import { signal, WritableSignal } from "../main/WritableSignal.js";
 
 describe("index", () => {
@@ -25,6 +27,7 @@ describe("index", () => {
         // Check classes and enums
         expect({ ...exports }).toEqual({
             atomic,
+            arraySignal,
             BaseSignal,
             computed,
             ComputedSignal,
@@ -32,7 +35,9 @@ describe("index", () => {
             Effect,
             ObserverSignal,
             ReadonlySignal,
+            ReadonlyArraySignal,
             WritableSignal,
+            WritableArraySignal,
             signal,
             SignalScope,
             toSignal,

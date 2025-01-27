@@ -2,7 +2,7 @@
 
 [GitHub] | [NPM] | [API Doc]
 
-This is a standalone signal implementation inspired by [Angular Signals] (which API it closely follows) and JavaFX's [Observable Values]. This signal implementation is framework- and platform-agnostic (works in browsers and Node.js) and is simply based on observables for dependency watching.
+This is a standalone signal implementation inspired by [Angular Signals] (which API it closely follows) and JavaFX's [Observable Values]. This signal implementation is framework- and platform-agnostic (works in browsers and Node.js) and is simply based on [observables] for dependency watching.
 
 
 ## Writable signals
@@ -45,6 +45,7 @@ subscription.unsubscribe();
 signal.set(3); // Doesn't call observer because no longer subscribed
 ```
 
+
 ## Computed signals
 
 A `ComputedSignal` computes its value on demand. Either when read synchronously and current value is outdated or was not computed yet at all, or immediately when observed and a dependent signal has changed.
@@ -84,6 +85,24 @@ signal.destroy();
 ```
 
 When all related signals can be garbage-collected together then there is no need to destroy the signal.
+
+
+## Array signals
+
+`WritableArraySignal` is specialized for working with arrays. It provides all common array functions like `push` and `pop` for example to manipulate the array of the signal.
+
+A writable array signal can be created via the `WritableArraySignal` constructor or the `arraySignal` function:
+
+
+```typescript
+import { arraySignal, computed } from "@kayahr/signal";
+
+const array = arraySignal([ 1, 2, 3 ]);
+const sum = computed(() => array.reduce((sum, value) => sum + value));
+console.log(sum()); // Outputs 6
+array.push(4);
+console.log(sum()); // Outputs 10
+```
 
 
 ## Observer signals
@@ -303,4 +322,4 @@ The throttling does not affect synchronous reading of the current value with the
 [NPM]: https://www.npmjs.com/package/@kayahr/signal
 [Angular Signals]: https://angular.dev/guide/signals
 [Observable Values]: https://docs.oracle.com/javase/8/javafx/api/javafx/beans/value/ObservableValue.html
-[@kayahr/observable]: https://www.npmjs.com/package/@kayahr/observable
+[observables]: https://www.npmjs.com/package/@kayahr/observable
