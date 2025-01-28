@@ -133,7 +133,7 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
 
     /** @inheritDoc */
     public subscribe(observer: Observer<T> | ((next: T) => void)): Subscription {
-        observer = observer instanceof Function ? { next: observer } : observer;
+        observer = typeof observer === "function" ? { next: observer } : observer;
         observer?.next?.(this.get());
         return this.#observable.subscribe(observer);
     }

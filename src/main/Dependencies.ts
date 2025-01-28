@@ -49,9 +49,11 @@ export class Dependencies {
         this.owner.get();
 
         // Any change on a dependency must call the getter
-        for (const dependency of this.dependencies) {
-            dependency.watch(() => untracked(this.owner));
-        }
+        Dependencies.untracked(() => {
+            for (const dependency of this.dependencies) {
+                dependency.watch(() => this.owner.get());
+            }
+        });
     }
 
     /**
@@ -194,7 +196,7 @@ export class Dependencies {
         const previousDependencies = activeDependencies;
         activeDependencies = null;
         try {
-            return subject instanceof Function ? subject() : subject.get();
+            return typeof subject === "function" ? subject() : subject.get();
         } finally {
             activeDependencies = previousDependencies;
         }

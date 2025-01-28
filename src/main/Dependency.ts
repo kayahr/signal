@@ -101,7 +101,7 @@ export class Dependency {
         if (this.#subscription != null) {
             throw new Error("Dependency is already watched");
         }
-        this.#subscription = this.#signal.subscribe(() => update());
+        this.#subscription = this.#signal.subscribe(update);
     }
 
     /**
