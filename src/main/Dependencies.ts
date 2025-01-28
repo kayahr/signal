@@ -49,11 +49,9 @@ export class Dependencies {
         this.owner.get();
 
         // Any change on a dependency must call the getter
-        Dependencies.untracked(() => {
-            for (const dependency of this.dependencies) {
-                dependency.watch(() => this.owner.get());
-            }
-        });
+        for (const dependency of this.dependencies) {
+            dependency.watch(() => untracked(this.owner));
+        }
     }
 
     /**
