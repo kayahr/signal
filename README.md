@@ -76,7 +76,7 @@ While `toggle` is `true` the computed signal `c` does not depend on `b` because 
 
 When a recorded dependency has changed then the compute function is re-evaluated the next time the computed value is read or must be emitted to subscribed observers.
 
-Because `ComputedSignal` subscribes to its dependencies the signal must be destroyed when no longer needed. This can be done automatically by using a signal scope (see later section) or manually by calling the `destroy()` method:
+Because `ComputedSignal` subscribes to its dependencies the signal must be destroyed when no longer needed. This can be done automatically by using a signal context (see later section) or manually by calling the `destroy()` method:
 
 ```typescript
 const signal = computed(() => someOtherSignal());
@@ -131,7 +131,7 @@ const observable = new Observable<number>(...);
 const signal = toSignal(observable, { requireSync: true }); // Type is `Signal<number>`
 ```
 
-Because `ObserverSignal` does immediately subscribe itself to the observable the signal must be destroyed when no longer needed. This can be done automatically by using a signal scope (see later section) or manually by calling the `destroy()` method:
+Because `ObserverSignal` does immediately subscribe itself to the observable the signal must be destroyed when no longer needed. This can be done automatically by using a signal context (see later section) or manually by calling the `destroy()` method:
 
 ```typescript
 const signal = toSignal(observable);
@@ -164,7 +164,7 @@ effect(() => {
 userName.set("Jane"); // Both effects now output the new user name
 ```
 
-Because `Effect` does actively subscribe to its dependencies the effect must be destroyed when no longer needed. This can be done automatically by using a signal scope (see later section) or manually by calling the `destroy()` method:
+Because `Effect` does actively subscribe to its dependencies the effect must be destroyed when no longer needed. This can be done automatically by using a signal context (see later section) or manually by calling the `destroy()` method:
 
 ```typescript
 const effectRef = effect(() => { ... });
@@ -219,29 +219,43 @@ effect() => {
 ```
 
 
-## Signal Scope
+## Signal Context
 
-Signal scopes can be used by frameworks to support automatic destruction of effects and signals which needs to be destructed (Like `ObserverSignal` or `ComputedSignal`). The workflow is pretty simple:
+Signal contexts can be used by frameworks to support automatic destruction of effects and signals which needs to be destructed (Like `ObserverSignal` or `ComputedSignal`). The workflow is pretty simple:
 
-* Create new Signal Scope for a specific application module (like a UI Component)
-* Run application initialization code within the context by using `scope.runInContext(fn)`. This might create signals which are then automatically associated with the currently active signal scope.
-* Destroy the signal scope when the application module is no longer needed. This destroys all signals which were created while this scope was active.
+* Write a custom signal context for your application by implementing the `SignalContext` interface.
+* Create new Signal Context for a specific application module (like a UI Component) and activate it with `setSignalContext(context)`.
+* Run application initialization code. This can create signals and effects which then register itself at context by calling `registerDestroyable` on it.
+* After the initialization code unset the signal context with `setSignalContext(null)` so subsequent signals are not accidentally associated with the context.
+* When you no longer need the application module then run the `destroy` method on all the signals and effects which registered themselves on the context.
 
 Simplified code example:
 
 ```typescript
-import { SignalScope } from "@kayahr/signal";
+import { setSignalContext, type SignalContext, type Destroyable } from "@kayahr/signal";
 
-const scope = new SignalScope():
-scope.runInContext(() => initSomeComponent()); // May create some signals
+class MyContext implements SignalContext {
+    #destroyables = new Set<Destroyables>();
+    public registerDestroyable(destroyable: Destroyable): void {
+        #destroyables.set(destroyable);
+    }
+    public destroy() {
+        for (const destroyable of this.#destroyables) {
+            destroyable.destroy();
+        }
+    }
+}
+
+const context = new MyContext():
+setSignalContext(context);
+initSomeComponent(); // May create some signals and effects
+setSignalContext(null);
 
 runApplication();
 
 destroyComponent();
-scope.destroy(); // Destroys all signals registered during component initialization
+context.destroy(); // Destroys all signals registered during component initialization
 ```
-
-Signal scopes can be hierarchical. When creating a new signal scope while another signal scope is active then the new signal scope is registered as child scope within the parent scope so it is destroyed when the parent scope is destroyed.
 
 
 ## Custom equality check

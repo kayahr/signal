@@ -8,15 +8,15 @@ import "@kayahr/vitest-matchers";
 import { describe, expect, it, vi } from "vitest";
 
 import { computed, ComputedSignal } from "../main/ComputedSignal.js";
-import { SignalScope } from "../main/SignalScope.js";
 import { signal } from "../main/WritableSignal.js";
+import { Context } from "./support/Context.js";
 
 describe("ComputedSignal", () => {
-    it("is destroyed via signal scope if present", () => {
+    it("is destroyed via signal context if present", () => {
         const value = signal(10);
         const compute = vi.fn(() => value() * 2);
-        const scope = new SignalScope();
-        const double = scope.runInScope(() => new ComputedSignal(compute));
+        const context = new Context();
+        const double = context.runInContext(() => new ComputedSignal(compute));
         const observer = vi.fn();
 
         // Initial call ob compute and observer
@@ -36,7 +36,7 @@ describe("ComputedSignal", () => {
         observer.mockClear();
 
         // No more calls when dependency changes after destroy
-        scope.destroy();
+        context.destroy();
         value.set(2);
         expect(compute).not.toHaveBeenCalledOnce();
         expect(observer).not.toHaveBeenCalledOnce();

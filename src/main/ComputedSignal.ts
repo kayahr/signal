@@ -6,7 +6,7 @@
 import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
 import { Dependencies } from "./Dependencies.js";
 import type { Destroyable } from "./Destroyable.js";
-import { SignalScope } from "./SignalScope.js";
+import { registerDestroyable } from "./SignalContext.js";
 
 /** Type of a compute function. */
 export type ComputeFunction<T = unknown> = () => T;
@@ -31,7 +31,7 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
         super(null as T, options);
         this.#dependencies = new Dependencies(this);
         this.#compute = compute;
-        SignalScope.registerDestroyable(this);
+        registerDestroyable(this);
     }
 
     /** @inheritDoc */

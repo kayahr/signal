@@ -7,21 +7,21 @@ import { Observable } from "@kayahr/observable";
 import { describe, expect, it } from "vitest";
 
 import { ObserverSignal, toSignal } from "../main/ObserverSignal.js";
-import { SignalScope } from "../main/SignalScope.js";
+import { Context } from "./support/Context.js";
 
 describe("ObserverSignal", () => {
-    it("is destroyed via signal scope if present", () => {
+    it("is destroyed via signal context if present", () => {
         let next = null as ((v: string) => void) | null;
         const observable = new Observable<string>(observer => {
             next = v => observer.next(v);
             return () => { next = null; };
         });
-        const scope = new SignalScope();
-        const signal = scope.runInScope(() => ObserverSignal.from(observable, { initialValue: "init" }));
+        const context = new Context();
+        const signal = context.runInContext(() => ObserverSignal.from(observable, { initialValue: "init" }));
         expect(signal.get()).toBe("init");
         next?.("test");
         expect(signal.get()).toBe("test");
-        scope.destroy();
+        context.destroy();
         expect(next).toBe(null);
         expect(() => signal.get()).toThrowError(new Error("Observer signal has been destroyed"));
     });

@@ -8,7 +8,7 @@ import type { Unsubscribable } from "@kayahr/observable";
 import { ComputedSignal } from "./ComputedSignal.js";
 import { untracked } from "./Dependencies.js";
 import type { Destroyable } from "./Destroyable.js";
-import { SignalScope } from "./SignalScope.js";
+import { registerDestroyable } from "./SignalContext.js";
 
 /** Cleanup function which can optionally be returned by effect function. It is called before effect function is called again and on effect destruction. */
 export type CleanupFunction = () => void;
@@ -40,7 +40,7 @@ export class Effect implements Destroyable {
             this.#cleanup = fn() ?? null;
         });
         this.#subscription = this.#signal.subscribe(() => {});
-        SignalScope.registerDestroyable(this);
+        registerDestroyable(this);
     }
 
     /**

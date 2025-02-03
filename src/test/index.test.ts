@@ -18,7 +18,7 @@ import { ObserverSignal, type ObserverSignalOptions, toSignal } from "../main/Ob
 import { ReadonlyArraySignal } from "../main/ReadonlyArraySignal.js";
 import { ReadonlySignal } from "../main/ReadonlySignal.js";
 import { type Signal } from "../main/Signal.js";
-import { SignalScope } from "../main/SignalScope.js";
+import { setSignalContext, type SignalContext } from "../main/SignalContext.js";
 import { arraySignal, WritableArraySignal } from "../main/WritableArraySignal.js";
 import { signal, WritableSignal } from "../main/WritableSignal.js";
 
@@ -39,7 +39,7 @@ describe("index", () => {
             WritableSignal,
             WritableArraySignal,
             signal,
-            SignalScope,
+            setSignalContext,
             toSignal,
             track,
             untracked
@@ -55,5 +55,6 @@ describe("index", () => {
         ((): ObserverSignalOptions => (({} as exports.ObserverSignalOptions)))();
         ((): EqualFunction => (({} as exports.EqualFunction)))();
         ((): Signal => (({} as exports.Signal)))();
+        ((): SignalContext => (({} as exports.SignalContext)))();
     });
 });

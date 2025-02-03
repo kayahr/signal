@@ -9,15 +9,15 @@ import { describe, expect, it, vi } from "vitest";
 
 import { computed } from "../main/ComputedSignal.js";
 import { Effect, effect } from "../main/Effect.js";
-import { SignalScope } from "../main/SignalScope.js";
 import { signal } from "../main/WritableSignal.js";
+import { Context } from "./support/Context.js";
 
 describe("Effect", () => {
-    it("is destroyed via signal scope if present", () => {
+    it("is destroyed via signal context if present", () => {
         const value = signal(10);
         const fn = vi.fn((a: number) => {});
-        const scope = new SignalScope();
-        scope.runInScope(() => new Effect(() => fn(value() * 2)));
+        const context = new Context();
+        context.runInContext(() => new Effect(() => fn(value() * 2)));
 
         // Initial call ob compute and observer
         expect(fn).toHaveBeenCalledOnce();
@@ -31,7 +31,7 @@ describe("Effect", () => {
         fn.mockClear();
 
         // No more calls when dependency changes after destroy
-        scope.destroy();
+        context.destroy();
         value.set(2);
         expect(fn).not.toHaveBeenCalledOnce();
     });

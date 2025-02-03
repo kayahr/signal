@@ -7,7 +7,7 @@ import type { Subscribable, Unsubscribable } from "@kayahr/observable";
 
 import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
 import type { Destroyable } from "./Destroyable.js";
-import { SignalScope } from "./SignalScope.js";
+import { registerDestroyable } from "./SignalContext.js";
 
 /**
  * Options for {@link ObserverSignal}.
@@ -49,7 +49,7 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
                 this.set(undefined as T);
             }
         }
-        SignalScope.registerDestroyable(this);
+        registerDestroyable(this);
     }
 
     public static from<T>(subscribable: Subscribable<T>, options: ObserverSignalOptions<T> & { initialValue: T }): ObserverSignal<T>;
@@ -61,8 +61,8 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
      * don't want that then either specify an `initialValue` in the signal options or use the `requireSync` option to define that the observable does emit
      * a value synchronously on subscription.
      *
-     * To prevent memory leaks you must either manually destroy the signal with the {@link destroy} method or use a {@link SignalScope} which automatically
-     * destroys observer signals created within the scope when the scope is destroyed.
+     * To prevent memory leaks you must either manually destroy the signal with the {@link destroy} method or use a {@link SignalContext} which automatically
+     * destroys observer signals created within the context when the context is destroyed.
      *
      * @param subscribable - The observable to subscribe to.
      * @param options      - Optional signal options.
@@ -74,7 +74,7 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
 
     /**
      * Destroys the observer signal by unsubscribing from the observable and removing any reference to it and also unregistering it from the current
-     * signal scope (if present).
+     * signal context (if present).
      */
     public destroy(): void {
         this.#subscription?.unsubscribe();
@@ -108,8 +108,8 @@ export function toSignal<T>(subscribable: Subscribable<T>, options?: ObserverSig
  * don't want that then either specify an `initialValue` in the signal options or use the `requireSync` option to define that the observable does emit
  * a value synchronously on subscription.
  *
- * To prevent memory leaks you must either manually destroy the signal with the {@link ObserverSignal.destroy} method or use a {@link SignalScope}
- * which automatically destroys observer signals created within the scope when the scope is destroyed.
+ * To prevent memory leaks you must either manually destroy the signal with the {@link ObserverSignal.destroy} method or use a {@link SignalContext}
+ * which automatically destroys observer signals created within the context when the context is destroyed.
  *
  * @param subscribable - The observable to subscribe to.
  * @param options      - Optional signal options.

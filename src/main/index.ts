@@ -15,6 +15,6 @@ export { ObserverSignal, type ObserverSignalOptions, toSignal } from "./Observer
 export { ReadonlyArraySignal } from "./ReadonlyArraySignal.js";
 export { ReadonlySignal } from "./ReadonlySignal.js";
 export { type Signal } from "./Signal.js";
-export { SignalScope } from "./SignalScope.js";
+export { setSignalContext, type SignalContext } from "./SignalContext.js";
 export { arraySignal, WritableArraySignal } from "./WritableArraySignal.js";
 export { signal, WritableSignal } from "./WritableSignal.js";
