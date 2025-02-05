@@ -1,7 +1,13 @@
 import { defineConfig } from "vitest/config";
 
+import tsconfig from "./tsconfig.json" with { type: "json" };
+
 export default defineConfig(
 {
+    esbuild: {
+        // No idea why these two settings are not inherited from tsconfig... So passing them through
+        target: tsconfig.compilerOptions.target
+    },
     test: {
         include: [ "src/test/**/*.test.ts" ],
         reporters: [
