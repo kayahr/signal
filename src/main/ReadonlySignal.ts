@@ -16,7 +16,7 @@ import type { Signal } from "./Signal.js";
  */
 export class ReadonlySignal<T = unknown> extends Callable<[], T> implements CallableSignal<T> {
     /** The wrapped signal. */
-    readonly #signal: Signal<T>;
+    private readonly signal: Signal<T>;
 
     /**
      * Creates new readonly wrapper for the given signal.
@@ -25,12 +25,12 @@ export class ReadonlySignal<T = unknown> extends Callable<[], T> implements Call
      */
     public constructor(signal: Signal<T>) {
         super(() => this.get());
-        this.#signal = signal;
+        this.signal = signal;
     }
 
     /** @inheritDoc */
     public subscribe(observer: Observer<T> | ((next: T) => void)): Unsubscribable {
-        return this.#signal.subscribe(observer);
+        return this.signal.subscribe(observer);
     }
 
     /** @inheritDoc */
@@ -40,26 +40,26 @@ export class ReadonlySignal<T = unknown> extends Callable<[], T> implements Call
 
     /** @inheritDoc */
     public getVersion(): unknown {
-        return this.#signal.getVersion();
+        return this.signal.getVersion();
     }
 
     /** @inheritDoc */
     public isWatched(): boolean {
-        return this.#signal.isWatched();
+        return this.signal.isWatched();
     }
 
     /** @inheritDoc */
     public isValid(): boolean {
-        return this.#signal.isValid();
+        return this.signal.isValid();
     }
 
     /** @inheritDoc */
     public validate(): void {
-        this.#signal.validate();
+        this.signal.validate();
     }
 
     /** @inheritDoc */
     public get(): T {
-        return this.#signal.get();
+        return this.signal.get();
     }
 }

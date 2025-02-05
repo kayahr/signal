@@ -15,10 +15,10 @@ import { ReadonlyArraySignal } from "./ReadonlyArraySignal.js";
  */
 export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements RelativeIndexable<T> {
     /** Used by {@link setAt} to determine if an item has really changed. */
-    readonly #equal: EqualFunction<T>;
+    private readonly equal: EqualFunction<T>;
 
     /** Writable version of the array. */
-    #elements: T[];
+    private elements: T[];
 
     /**
      * Creates new writable array signal initialized to the given elements.
@@ -29,8 +29,8 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
     public constructor(elements?: T[], { equal = Object.is, ...options }: BaseSignalOptions<T> = {}) {
         elements = elements?.slice() ?? [];
         super(elements, { ...options, equal: () => false });
-        this.#elements = elements;
-        this.#equal = equal;
+        this.elements = elements;
+        this.equal = equal;
 
         // Have to define length as instance property getter to override the length property set by Callable function
         Object.defineProperty(this, "length", {
@@ -55,7 +55,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
      * @param elements - The new array elements to set.
      */
     public override set(elements: T[]): this {
-        return super.set(this.#elements = elements.slice());
+        return super.set(this.elements = elements.slice());
     }
 
     /**
@@ -65,11 +65,11 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
      * @param element - The element to set.
      */
     public setAt(index: number, element: T): this {
-        if (this.#equal(this.#elements[index], element)) {
+        if (this.equal(this.elements[index], element)) {
             // Short cut when call does not modify the array
             return this;
         }
-        this.#update(elements => { elements[index] = element; });
+        this.update(elements => { elements[index] = element; });
         return this;
     }
 
@@ -81,11 +81,11 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
      *               mutator result depends on the array content.
      * @returns The result of the mutator function.
      */
-    #update<R>(fn: (elements: T[]) => R, read = false): R {
-        const elements = this.#elements;
+    private update<R>(fn: (elements: T[]) => R, read = false): R {
+        const elements = this.elements;
         const result = fn(elements);
         super.set(read ? this.get() : elements);
-        this.#elements = elements;
+        this.elements = elements;
         return result;
     }
 
@@ -99,7 +99,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
             // Short cut when call does not modify the array
             return undefined;
         }
-        return this.#update(elements => elements.pop());
+        return this.update(elements => elements.pop());
     }
 
     /**
@@ -113,7 +113,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
             // Short cut when call does not modify the array
             return this.get().length;
         }
-        return this.#update(elements => elements.push(...newElements), true);
+        return this.update(elements => elements.push(...newElements), true);
     }
 
     public concat(...items: Array<ConcatArray<T>>): T[];
@@ -144,8 +144,8 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
      * Reverses the elements in the array in place. Does nothing when array has fewer than 2 elements.
      */
     public reverse(): this {
-        if (this.#elements.length > 1) {
-            this.#update(values => values.reverse());
+        if (this.elements.length > 1) {
+            this.update(values => values.reverse());
         }
         return this;
     }
@@ -160,7 +160,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
             // Short cut when call does not modify the array
             return undefined;
         }
-        return this.#update(items => items.shift());
+        return this.update(items => items.shift());
     }
 
     /**
@@ -183,8 +183,8 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
      *                    ASCII character order.
      */
     public sort(compareFn?: ((a: T, b: T) => number)): this {
-        if (this.#elements.length > 1) {
-            this.#update(items => items.sort(compareFn));
+        if (this.elements.length > 1) {
+            this.update(items => items.sort(compareFn));
         }
         return this;
     }
@@ -202,7 +202,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
             // Short-cut when call can't possibly change the array
             return [];
         }
-        return this.#update(elements => elements.splice(start, deleteCount, ...newElements), true);
+        return this.update(elements => elements.splice(start, deleteCount, ...newElements), true);
     }
 
     /**
@@ -216,7 +216,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
             // Short cut when call does not modify the array
             return this.get().length;
         }
-        return this.#update(elements => elements.unshift(...newElements), true);
+        return this.update(elements => elements.unshift(...newElements), true);
     }
 
     /**
@@ -375,7 +375,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
      * @param end   - Optional index to stop filling the array at. Defaults to length. If end is negative, it is treated as length+end.
      */
     public fill(value: T, start?: number, end?: number): this {
-        this.#update(items => items.fill(value, start, end));
+        this.update(items => items.fill(value, start, end));
         return this;
     }
 
@@ -388,7 +388,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
      *                 it is treated as length+end.
      */
     public copyWithin(target: number, start: number, end?: number): this {
-        this.#update(items => items.copyWithin(target, start, end));
+        this.update(items => items.copyWithin(target, start, end));
         return this;
     }
 

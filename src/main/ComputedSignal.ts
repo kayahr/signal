@@ -16,10 +16,10 @@ export type ComputeFunction<T = unknown> = () => T;
  * dynamically recorded as dependencies so the computed signal is automatically updated when dependent signals report new values.
  */
 export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destroyable {
-    readonly #compute: ComputeFunction<T>;
-    readonly #dependencies: Dependencies;
-    #destroyed = false;
-    #initialized = false;
+    private readonly compute: ComputeFunction<T>;
+    private readonly dependencies: Dependencies;
+    private destroyed = false;
+    private initialized = false;
 
     /**
      * Creates a new computed signal
@@ -29,35 +29,35 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
      */
     public constructor(compute: ComputeFunction<T>, options?: BaseSignalOptions<T>) {
         super(null as T, options);
-        this.#dependencies = new Dependencies(this);
-        this.#compute = compute;
+        this.dependencies = new Dependencies(this);
+        this.compute = compute;
         registerDestroyable(this);
     }
 
     /** @inheritDoc */
     protected override watch(): void {
-        this.#dependencies.watch();
+        this.dependencies.watch();
     }
 
     /** @inheritDoc */
     protected override unwatch(): void {
-        this.#dependencies.unwatch();
+        this.dependencies.unwatch();
     }
 
-    #update(): void {
-        const value = this.#dependencies.record(() => this.#compute());
-        this.#initialized = true;
+    private update(): void {
+        const value = this.dependencies.record(() => this.compute());
+        this.initialized = true;
         this.set(value);
     }
 
     /** @inheritDoc */
     public override get(): T {
-        if (this.#destroyed) {
+        if (this.destroyed) {
             throw new Error("Computed signal has been destroyed");
         }
-        if (!this.#initialized) {
+        if (!this.initialized) {
             // Value has not been computed before, so initialize it now
-            this.#update();
+            this.update();
         } else if (!this.isValid()) {
             // Value is no longer valid, validate it and fetch it
             this.validate();
@@ -67,19 +67,19 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
 
     /** @inheritDoc */
     public destroy(): void {
-        this.#destroyed = true;
-        this.#dependencies.destroy();
+        this.destroyed = true;
+        this.dependencies.destroy();
     }
 
     /** @inheritDoc */
     public override isValid(): boolean {
-        return this.#dependencies.isValid();
+        return this.dependencies.isValid();
     }
 
     /** @inheritDoc */
     public override validate(): void {
-        if (this.#dependencies.validate()) {
-            this.#update();
+        if (this.dependencies.validate()) {
+            this.update();
         }
     }
 }

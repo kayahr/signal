@@ -21,9 +21,9 @@ export type EffectFunction = () => void | CleanupFunction;
  * an observed {@link ComputedSignal}.
  */
 export class Effect implements Destroyable {
-    readonly #signal: ComputedSignal<void>;
-    readonly #subscription: Unsubscribable;
-    #cleanup: CleanupFunction | null = null;
+    private readonly signal: ComputedSignal<void>;
+    private readonly subscription: Unsubscribable;
+    private cleanup: CleanupFunction | null = null;
 
     /**
      * Creates an effect calling the given function once immediately and then again every time a recorded dependency has changed.
@@ -32,14 +32,14 @@ export class Effect implements Destroyable {
      *             on effect destruction.
      */
     public constructor(fn: EffectFunction) {
-        this.#signal = new ComputedSignal(() => {
-            const cleanup = this.#cleanup;
+        this.signal = new ComputedSignal(() => {
+            const cleanup = this.cleanup;
             if (cleanup != null) {
                 untracked(cleanup);
             }
-            this.#cleanup = fn() ?? null;
+            this.cleanup = fn() ?? null;
         });
-        this.#subscription = this.#signal.subscribe(() => {});
+        this.subscription = this.signal.subscribe(() => {});
         registerDestroyable(this);
     }
 
@@ -48,10 +48,10 @@ export class Effect implements Destroyable {
      * internal computed signal.
      */
     public destroy(): void {
-        this.#cleanup?.();
-        this.#cleanup = null;
-        this.#subscription.unsubscribe();
-        this.#signal.destroy();
+        this.cleanup?.();
+        this.cleanup = null;
+        this.subscription.unsubscribe();
+        this.signal.destroy();
     }
 }
 

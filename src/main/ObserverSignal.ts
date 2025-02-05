@@ -32,15 +32,15 @@ const NONE = Symbol("@kayahr/signal/ObserverSignal#NONE");
  * Signal which observes the given observable.
  */
 export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
-    #subscription: Unsubscribable | null = null;
-    #error: Error | null = null;
-    #destroyed = false;
+    private subscription: Unsubscribable | null = null;
+    private error: Error | null = null;
+    private destroyed = false;
 
     private constructor(subscribable: Subscribable<T>, { requireSync = false, initialValue = NONE as T, ...options }: ObserverSignalOptions<T> = {}) {
         super(initialValue, options);
-        this.#subscription = subscribable.subscribe(
+        this.subscription = subscribable.subscribe(
             value => { this.set(value); },
-            error => { this.#error = error; }
+            error => { this.error = error; }
         );
         if (this.get() === NONE) {
             if (requireSync) {
@@ -77,9 +77,9 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
      * signal context (if present).
      */
     public destroy(): void {
-        this.#subscription?.unsubscribe();
-        this.#subscription = null;
-        this.#destroyed = true;
+        this.subscription?.unsubscribe();
+        this.subscription = null;
+        this.destroyed = true;
     }
 
     /**
@@ -90,9 +90,9 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
      * @throws Error - The error emitted by the observable, if any.
      */
     public override get(): T {
-        if (this.#error != null) {
-            throw this.#error;
-        } else if (this.#destroyed) {
+        if (this.error != null) {
+            throw this.error;
+        } else if (this.destroyed) {
             throw new Error("Observer signal has been destroyed");
         }
         return super.get();

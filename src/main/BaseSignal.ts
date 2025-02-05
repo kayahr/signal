@@ -38,18 +38,18 @@ export interface BaseSignalOptions<T = unknown> {
  * observability of it through in internally created shared observable.
  */
 export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements CallableSignal<T> {
-    readonly #equals: EqualFunction<T>;
-    #observable: Observable<T> | null = null;
-    #value: T;
-    #observer: SubscriptionObserver<T> | null = null;
-    #paused = false;
-    #version: number;
+    private readonly equals: EqualFunction<T>;
+    private observable: Observable<T> | null = null;
+    private value: T;
+    private observer: SubscriptionObserver<T> | null = null;
+    private paused = false;
+    private version: number;
 
     /** The observer notification throttle delay in milliseconds. Null if not throttled. */
-    readonly #throttle: number | null;
+    private readonly throttle: number | null;
 
     /** The handle of the currently running throttle timeout. */
-    #throttleTimeout: unknown = null;
+    private throttleTimeout: unknown = null;
 
     /**
      * Creates a new signal with the given initial value and options.
@@ -59,16 +59,16 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
      */
     public constructor(initialValue: T, { equal: equals = Object.is, version: initialVersion = 0, throttle = null }: BaseSignalOptions<T> = {}) {
         super(() => this.get());
-        this.#value = initialValue;
-        this.#version = initialVersion;
-        this.#equals = equals;
-        this.#throttle = throttle;
+        this.value = initialValue;
+        this.version = initialVersion;
+        this.equals = equals;
+        this.throttle = throttle;
     }
 
     /** @inheritDoc */
     public get(): T {
         track(this);
-        return this.#value;
+        return this.value;
     }
 
     /**
@@ -76,14 +76,14 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
      *
      * @param value - The value to submit.
      */
-    #next(value: T): void {
-        if (this.#throttle == null) {
-            this.#observer?.next(value);
-        } else if (this.#throttleTimeout == null) {
-            this.#throttleTimeout = setTimeout(() => {
-                this.#throttleTimeout = null;
-                this.#observer?.next(this.get());
-            }, this.#throttle);
+    private next(value: T): void {
+        if (this.throttle == null) {
+            this.observer?.next(value);
+        } else if (this.throttleTimeout == null) {
+            this.throttleTimeout = setTimeout(() => {
+                this.throttleTimeout = null;
+                this.observer?.next(this.get());
+            }, this.throttle);
         }
     }
 
@@ -94,30 +94,30 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
      * @param value - The value to set.
      */
     protected set(value: T): this {
-        if (!this.#equals(value, this.#value)) {
-            if (this.#version === Number.MAX_SAFE_INTEGER) {
-                this.#version = Number.MIN_SAFE_INTEGER;
+        if (!this.equals(value, this.value)) {
+            if (this.version === Number.MAX_SAFE_INTEGER) {
+                this.version = Number.MIN_SAFE_INTEGER;
             } else {
-                this.#version++;
+                this.version++;
             }
-            this.#value = value;
+            this.value = value;
             const atom = getAtom();
             if (atom != null) {
                 // Atomic operation is active. Pause the signal (if not already done) and inform observers with
                 // current value as soon as the atomic operation completes
                 // console.log("atom detected");
-                if (!this.#paused) {
-                    this.#paused = true;
+                if (!this.paused) {
+                    this.paused = true;
                     atom.subscribe({
                         complete: () => {
-                            this.#paused = false;
-                            this.#next(this.#value);
+                            this.paused = false;
+                            this.next(this.value);
                         }
                     });
                 }
             } else {
                 // No atomic operation active, inform observers immediately.
-                this.#next(value);
+                this.next(value);
             }
         }
         return this;
@@ -127,15 +127,15 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     public subscribe(observer: Observer<T> | ((next: T) => void)): Subscription {
         observer = typeof observer === "function" ? { next: observer } : observer;
         observer?.next?.(this.get());
-        this.#observable ??= new SharedObservable<T>(observer => {
+        this.observable ??= new SharedObservable<T>(observer => {
             this.watch();
-            this.#observer = observer;
+            this.observer = observer;
             return () => {
                 this.unwatch();
-                this.#observer = null;
+                this.observer = null;
             };
         });
-        return this.#observable.subscribe(observer);
+        return this.observable.subscribe(observer);
     }
 
     /** @inheritDoc */
@@ -145,7 +145,7 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
 
     /** @inheritDoc */
     public isWatched(): boolean {
-        return this.#observer != null;
+        return this.observer != null;
     }
 
     /** Called when first observer subscribes. */
@@ -161,7 +161,7 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
      * @returns The current signal version.
      */
     public getVersion(): number {
-        return this.#version;
+        return this.version;
     }
 
     /** @inheritDoc */

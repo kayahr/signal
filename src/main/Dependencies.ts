@@ -26,7 +26,7 @@ export class Dependencies {
      * Flag indicating if we are currently recording. Used to prevent calling the onUpdate callback during recording and also used to detect circular
      * dependencies.
      */
-    #recording = false;
+    private recording = false;
 
     /** Flag indicating that dependencies are currently validating. During validation other validate calls are ignored. */
     private validating = false;
@@ -157,7 +157,7 @@ export class Dependencies {
      * @returns The function result.
      */
     public record<T>(fn: () => T): T {
-        if (this.#recording) {
+        if (this.recording) {
             throw new Error("Circular dependency detected during computed signal computation");
         }
         const previousDependencies = activeDependencies;
@@ -165,13 +165,13 @@ export class Dependencies {
 
         // Mark all dependencies as unused. Will be marked as used again if really used. The rest can be removed later.
         this.dependencies.forEach(dependency => dependency.setUsed(false));
-        this.#recording = true;
+        this.recording = true;
         try {
             return fn();
         } finally {
             activeDependencies = previousDependencies;
             this.removeUnused();
-            this.#recording = false;
+            this.recording = false;
         }
     }
 

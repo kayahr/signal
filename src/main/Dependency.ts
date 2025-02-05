@@ -12,31 +12,31 @@ import type { Signal } from "./Signal.js";
  */
 export class Dependency {
     /** The dependency signal. */
-    readonly #signal: Signal;
+    private readonly signal: Signal;
 
     /**
      * The last seen version of the signal value. When this number no longer matches the current version of the signal value
      * then the dependency owner must be updated.
      */
-    #version: unknown;
+    private version: unknown;
 
     /**
      * The active subscription monitoring signal changes. Only present when dependency is watched. Null otherwise.
      */
-    #subscription: Unsubscribable | null = null;
+    private subscription: Unsubscribable | null = null;
 
     /**
      * True if this dependency is used, false if not. This is set to false by {@link setUsed} before dependency recording starts and is set to true
      * by {@link markAsUsed} when it is found to be used during dependency recording.
      */
-    #used = true;
+    private used = true;
 
     /**
      * @param signal - The dependency signal.
      */
     public constructor(signal: Signal) {
-        this.#signal = signal;
-        this.#version = signal.getVersion();
+        this.signal = signal;
+        this.version = signal.getVersion();
     }
 
     /**
@@ -45,14 +45,14 @@ export class Dependency {
      * @param used - True to mark dependency as used, false to mark it as unused.
      */
     public setUsed(used: boolean): void {
-        this.#used = used;
+        this.used = used;
     }
 
     /**
      * @returns True if dependency is used, false if not.
      */
     public isUsed(): boolean {
-        return this.#used;
+        return this.used;
     }
 
     /**
@@ -62,7 +62,7 @@ export class Dependency {
      * @returns True if dependency is valid, false if not.
      */
     public isValid(): boolean {
-        return this.#signal.getVersion() === this.#version && this.#signal.isValid();
+        return this.signal.getVersion() === this.version && this.signal.isValid();
     }
 
     /**
@@ -71,9 +71,9 @@ export class Dependency {
      * @returns True if signal value has changed, false if signal value has not changed.
      */
     public validate(): boolean {
-        this.#signal.validate();
-        const version = this.#signal.getVersion();
-        if (version !== this.#version) {
+        this.signal.validate();
+        const version = this.signal.getVersion();
+        if (version !== this.version) {
             this.update();
             return true;
         }
@@ -84,35 +84,35 @@ export class Dependency {
      * Updates the dependency by saving the signal value version as last seen version.
      */
     public update(): void {
-        this.#version = this.#signal.getVersion();
+        this.version = this.signal.getVersion();
     }
 
     /**
      * @returns True if dependency is watched, false if not.
      */
     public isWatched(): boolean {
-        return this.#subscription != null;
+        return this.subscription != null;
     }
 
     /**
      * Starts watching the dependency. The given function is called when referenced signal changes.
      */
     public watch(update: () => void): void {
-        if (this.#subscription != null) {
+        if (this.subscription != null) {
             throw new Error("Dependency is already watched");
         }
-        this.#subscription = this.#signal.subscribe(update);
+        this.subscription = this.signal.subscribe(update);
     }
 
     /**
      * Stops watching the dependency.
      */
     public unwatch(): void {
-        if (this.#subscription == null) {
+        if (this.subscription == null) {
             throw new Error("Dependency is not watched");
         }
-        this.#subscription.unsubscribe();
-        this.#subscription = null;
+        this.subscription.unsubscribe();
+        this.subscription = null;
     }
 
     /**
