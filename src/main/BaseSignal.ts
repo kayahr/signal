@@ -39,7 +39,7 @@ export interface BaseSignalOptions<T = unknown> {
  */
 export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements CallableSignal<T> {
     readonly #equals: EqualFunction<T>;
-    readonly #observable: Observable<T>;
+    #observable: Observable<T> | null = null;
     #value: T;
     #observer: SubscriptionObserver<T> | null = null;
     #paused = false;
@@ -63,14 +63,6 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
         this.#version = initialVersion;
         this.#equals = equals;
         this.#throttle = throttle;
-        this.#observable = new SharedObservable<T>(observer => {
-            this.watch();
-            this.#observer = observer;
-            return () => {
-                this.unwatch();
-                this.#observer = null;
-            };
-        });
     }
 
     /** @inheritDoc */
@@ -135,6 +127,14 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     public subscribe(observer: Observer<T> | ((next: T) => void)): Subscription {
         observer = typeof observer === "function" ? { next: observer } : observer;
         observer?.next?.(this.get());
+        this.#observable ??= new SharedObservable<T>(observer => {
+            this.watch();
+            this.#observer = observer;
+            return () => {
+                this.unwatch();
+                this.#observer = null;
+            };
+        });
         return this.#observable.subscribe(observer);
     }
 
