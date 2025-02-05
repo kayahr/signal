@@ -39,7 +39,7 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
     private constructor(subscribable: Subscribable<T>, { requireSync = false, initialValue = NONE as T, ...options }: ObserverSignalOptions<T> = {}) {
         super(initialValue, options);
         this.#subscription = subscribable.subscribe(
-            value => this.set(value),
+            value => { this.set(value); },
             error => { this.#error = error; }
         );
         if (this.get() === NONE) {

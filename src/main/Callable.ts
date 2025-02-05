@@ -3,6 +3,8 @@
  * See LICENSE.md for licensing information
  */
 
+/* eslint-disable @typescript-eslint/no-extraneous-class */
+
 export interface Callable<T extends unknown[] = unknown[], R = unknown> {
     (...args: T): R;
 }
@@ -10,15 +12,13 @@ export interface Callable<T extends unknown[] = unknown[], R = unknown> {
 /**
  * Class with a function signature calling the function passed to the constructor.
  */
-export class Callable<T extends unknown[] = unknown[], R = unknown> extends Function {
+export abstract class Callable<T extends unknown[] = unknown[], R = unknown> {
     /**
      * Creates a new callable which runs the given function when instance is called through it's function signature.
      *
      * @param func - The function to call when function signature of callable instance is called.
      */
     public constructor(func: (...args: T) => R) {
-        super();
-        const a = Object.setPrototypeOf(func, new.target.prototype) as typeof this;
-        return a;
+        return Object.setPrototypeOf(func, new.target.prototype) as typeof this;
     }
 }
