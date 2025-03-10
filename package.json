@@ -39,7 +39,7 @@
         "@kayahr/eslint-config": "3.3.0",
         "@kayahr/vitest-matchers": "1.1.0",
         "@types/node": "22.13.0",
-        "@vitest/browser": "3.0.5",
+        "@vitest/browser": "3.0.8",
         "@vitest/coverage-v8": "3.0.5",
         "cspell": "8.17.3",
         "npm-run-all": "4.1.5",
