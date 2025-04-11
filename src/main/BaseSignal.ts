@@ -79,8 +79,8 @@ export abstract class BaseSignal<T = unknown> extends Callable<[], T> implements
     private next(value: T): void {
         if (this.throttle == null) {
             this.observer?.next(value);
-        } else if (this.throttleTimeout == null) {
-            this.throttleTimeout = setTimeout(() => {
+        } else {
+            this.throttleTimeout ??= setTimeout(() => {
                 this.throttleTimeout = null;
                 this.observer?.next(this.get());
             }, this.throttle);
