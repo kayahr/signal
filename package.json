@@ -36,7 +36,7 @@
         "prepare": "run-s install:browser clean build"
     },
     "devDependencies": {
-        "@kayahr/eslint-config": "3.4.0",
+        "@kayahr/eslint-config": "3.5.0",
         "@kayahr/vitest-matchers": "1.1.0",
         "@types/node": "22.14.0",
         "@vitest/browser": "3.1.1",
