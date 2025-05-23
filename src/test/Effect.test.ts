@@ -152,5 +152,9 @@ describe("Effect", () => {
             effectRef.destroy();
             expect(cleanup).toHaveBeenCalledOnce();
         });
+        it("can destroy an effect directly after creation", () => {
+            const value = signal(0);
+            expect(() => effect(() => { value.get(); }).destroy()).not.toThrow();
+        });
     });
 });
