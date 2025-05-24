@@ -5,14 +5,14 @@
 
 import "symbol-observable";
 
-import type { InteropSubscribable, Observer, Unsubscribable } from "@kayahr/observable";
+import type { Observer, Unsubscribable } from "@kayahr/observable";
 
-import type { Signal } from "./Signal.js";
+import { Signal } from "./Signal.js";
 
 /**
  * Readonly wrapper for a signal.
  */
-export class ReadonlySignal<T = unknown> implements Signal<T> {
+export class ReadonlySignal<T = unknown> extends Signal<T> {
     /** The wrapped signal. */
     private readonly signal: Signal<T>;
 
@@ -22,17 +22,13 @@ export class ReadonlySignal<T = unknown> implements Signal<T> {
      * @param signal - The signal to wrap.
      */
     public constructor(signal: Signal<T>) {
+        super();
         this.signal = signal;
     }
 
     /** @inheritDoc */
     public subscribe(observer: Observer<T> | ((next: T) => void)): Unsubscribable {
         return this.signal.subscribe(observer);
-    }
-
-    /** @inheritDoc */
-    public [Symbol.observable](): InteropSubscribable<T> {
-        return this;
     }
 
     /** @inheritDoc */

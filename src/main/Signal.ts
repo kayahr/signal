@@ -3,24 +3,29 @@
  * See LICENSE.md for licensing information
  */
 
-import type { InteropObservable, Observer, Unsubscribable } from "@kayahr/observable";
+import type { InteropObservable, InteropSubscribable, Observer, Unsubscribable } from "@kayahr/observable";
 
 /**
  * Base signal interface with read-only access to the signal value. It is subscribable and must emit the current value directly on subscription.
  */
-export interface Signal<T = unknown> extends InteropObservable<T> {
+export abstract class Signal<T = unknown> implements InteropObservable<T> {
     /**
      * Subscribes the given observer to this object.
      *
      * @param observer - The observer to subscribe.
      * @return Object which can be used to unsubscribe the observer.
      */
-    subscribe(observer: Observer<T> | ((next: T) => void)): Unsubscribable;
+    public abstract subscribe(observer: Observer<T> | ((next: T) => void)): Unsubscribable;
+
+    /** @inheritDoc */
+    public [Symbol.observable](): InteropSubscribable<T> {
+        return this;
+    }
 
     /**
      * @returns The current signal value.
      */
-    get(): T;
+    public abstract get(): T;
 
     /**
      * Returns the current signal value version. This value is used to determine if a dependency has changed. The most simple implementation would be a number
@@ -28,7 +33,7 @@ export interface Signal<T = unknown> extends InteropObservable<T> {
      *
      * @returns The current signal value version.
      */
-    getVersion(): unknown;
+    public abstract getVersion(): unknown;
 
     /**
      * Checks if signal value is still valid. When signal has no dependencies then this method can always return true. If signal has dependencies then it
@@ -37,17 +42,17 @@ export interface Signal<T = unknown> extends InteropObservable<T> {
      *
      * @returns True if signal value is valid, false if it must be re-validated.
      */
-    isValid(): boolean;
+    public abstract isValid(): boolean;
 
     /**
      * Called when {@link isValid()} returned false and the current value of this signal is needed. Must compute/fetch and cache the new value so the
      * next call to {@link get()} returns a valid value. When signal has no dependencies and {@link isValid()} is implemented to always return true
      * then this method can stay empty as it has nothing to validate/update.
      */
-    validate(): void;
+    public abstract validate(): void;
 
     /**
      * @returns True if signal is watched (has subscribed observers) or false if not.
      */
-    isWatched(): boolean;
+    public abstract isWatched(): boolean;
 }

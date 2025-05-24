@@ -5,12 +5,12 @@
 
 import "symbol-observable";
 
-import { type InteropSubscribable, Observable, type Observer, SharedObservable, type Subscription, type SubscriptionObserver } from "@kayahr/observable";
+import { Observable, type Observer, SharedObservable, type Subscription, type SubscriptionObserver } from "@kayahr/observable";
 
 import { getAtom } from "./atomic.js";
 import { track } from "./Dependencies.js";
 import type { EqualFunction } from "./EqualFunction.js";
-import type { Signal } from "./Signal.js";
+import { Signal } from "./Signal.js";
 
 /**
  * Base signal options.
@@ -36,7 +36,7 @@ export interface BaseSignalOptions<T = unknown> {
  * Abstract base class for signal implementations managing the callability of the signal object and internal management of the signal value including the
  * observability of it through in internally created shared observable.
  */
-export abstract class BaseSignal<T = unknown> implements Signal<T> {
+export abstract class BaseSignal<T = unknown> extends Signal<T> {
     private readonly equals: EqualFunction<T>;
     private observable: Observable<T> | null = null;
     private value: T;
@@ -57,6 +57,7 @@ export abstract class BaseSignal<T = unknown> implements Signal<T> {
      * @param options      - The base signal options.
      */
     public constructor(initialValue: T, { equal: equals = Object.is, version: initialVersion = 0, throttle = null }: BaseSignalOptions<T> = {}) {
+        super();
         this.value = initialValue;
         this.version = initialVersion;
         this.equals = equals;
@@ -134,11 +135,6 @@ export abstract class BaseSignal<T = unknown> implements Signal<T> {
             };
         });
         return this.observable.subscribe(observer);
-    }
-
-    /** @inheritDoc */
-    public [Symbol.observable](): InteropSubscribable<T> {
-        return this;
     }
 
     /** @inheritDoc */
