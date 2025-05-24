@@ -16,7 +16,7 @@ describe("atomic", () => {
     it("pauses signal notifications until atomic operation is complete", () => {
         const a = signal(1);
         const b = signal(2);
-        const c = computed(() => a() + b());
+        const c = computed(() => a.get() + b.get());
         const fn = vi.fn();
         c.subscribe(fn);
         expect(fn).toHaveBeenCalledExactlyOnceWith(3);
@@ -31,8 +31,8 @@ describe("atomic", () => {
     it("pauses signal notifications of multiple signals until atomic operation is complete", () => {
         const a = signal(2);
         const b = signal(3);
-        const c = computed(() => a() + b());
-        const d = computed(() => a() * b());
+        const c = computed(() => a.get() + b.get());
+        const d = computed(() => a.get() * b.get());
         const cChanged = vi.fn();
         const dChanged = vi.fn();
         c.subscribe(cChanged);
@@ -53,7 +53,7 @@ describe("atomic", () => {
     it("can be nested", () => {
         const a = signal(1);
         const b = signal(2);
-        const c = computed(() => a() + b());
+        const c = computed(() => a.get() + b.get());
         const fn = vi.fn();
         c.subscribe(fn);
         expect(fn).toHaveBeenCalledExactlyOnceWith(3);
@@ -81,7 +81,7 @@ describe("atomic", () => {
     it("returns the function result", () => {
         const a = signal(1);
         const b = signal(2);
-        const c = computed(() => a() + b());
+        const c = computed(() => a.get() + b.get());
         const fn = vi.fn();
         c.subscribe(fn);
         expect(fn).toHaveBeenCalledExactlyOnceWith(3);
@@ -101,7 +101,7 @@ describe("atomic", () => {
         const b = signal(2);
         let c = 0;
         effect(() => {
-            c = a() + b();
+            c = a.get() + b.get();
         });
         expect(c).toBe(3);
         atomic(() => {
@@ -118,13 +118,13 @@ describe("atomic", () => {
     it("does not effect synchronous getter calls", () => {
         const a = signal(1);
         const b = signal(2);
-        const c = computed(() => a() + b());
+        const c = computed(() => a.get() + b.get());
         atomic(() => {
-            expect(c()).toBe(3);
+            expect(c.get()).toBe(3);
             a.set(3);
-            expect(c()).toBe(5);
+            expect(c.get()).toBe(5);
             b.set(10);
-            expect(c()).toBe(13);
+            expect(c.get()).toBe(13);
         });
     });
 });

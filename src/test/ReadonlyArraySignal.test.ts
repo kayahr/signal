@@ -16,7 +16,7 @@ import { WritableArraySignal } from "../main/WritableArraySignal.js";
 describe("ReadonlyArraySignal", () => {
     it("can be called as a getter function", () => {
         const value = new ReadonlyArraySignal(new WritableArraySignal([ 20 ]));
-        expect(value()).toEqual([ 20 ]);
+        expect(value.get()).toEqual([ 20 ]);
     });
     it("can be observed for changes on the wrapped value", () => {
         const a = new WritableArraySignal([ 10 ]);
@@ -96,9 +96,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1 ]);
             const roArray = array.asReadonly();
             const len = computed(() => roArray.length * 10);
-            expect(len()).toBe(10);
+            expect(len.get()).toBe(10);
             array.push(2);
-            expect(len()).toBe(20);
+            expect(len.get()).toBe(20);
         });
     });
 
@@ -115,15 +115,15 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             expect(roArray.concat([ 4, 5 ])).toEqual([ 1, 2, 3, 4, 5 ]);
-            expect(roArray()).toEqual([ 1, 2, 3 ]);
+            expect(roArray.get()).toEqual([ 1, 2, 3 ]);
         });
         it("tracks signal as dependency", () => {
             const a1 = new WritableArraySignal<number | string>([ 1 ]);
             const roArray = a1.asReadonly();
             const a2 = computed(() => roArray.concat([ "End" ]));
-            expect(a2()).toEqual([ 1, "End" ]);
+            expect(a2.get()).toEqual([ 1, "End" ]);
             a1.push(2);
-            expect(a2()).toEqual([ 1, 2, "End" ]);
+            expect(a2.get()).toEqual([ 1, 2, "End" ]);
         });
     });
 
@@ -142,9 +142,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1 ]);
             const roArray = array.asReadonly();
             const string = computed(() => `<${roArray.join(":")}>`);
-            expect(string()).toBe("<1>");
+            expect(string.get()).toBe("<1>");
             array.push(2);
-            expect(string()).toBe("<1:2>");
+            expect(string.get()).toBe("<1:2>");
         });
     });
 
@@ -175,12 +175,12 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5 ]);
             const roArray = array.asReadonly();
             const sub = computed(() => roArray.slice(1, 3));
-            expect(sub()).toEqual([ 2, 3 ]);
+            expect(sub.get()).toEqual([ 2, 3 ]);
             array.unshift(0);
-            expect(sub()).toEqual([ 1, 2 ]);
+            expect(sub.get()).toEqual([ 1, 2 ]);
             array.shift();
             array.shift();
-            expect(sub()).toEqual([ 3, 4 ]);
+            expect(sub.get()).toEqual([ 3, 4 ]);
         });
     });
 
@@ -209,9 +209,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 3, 2, 1 ]);
             const roArray = array.asReadonly();
             const index = computed(() => roArray.indexOf(2) * 10);
-            expect(index()).toBe(10);
+            expect(index.get()).toBe(10);
             array.unshift(4);
-            expect(index()).toBe(20);
+            expect(index.get()).toBe(20);
         });
     });
 
@@ -241,9 +241,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 3, 2, 1 ]);
             const roArray = array.asReadonly();
             const index = computed(() => roArray.lastIndexOf(2) * 10);
-            expect(index()).toBe(40);
+            expect(index.get()).toBe(40);
             array.unshift(4);
-            expect(index()).toBe(50);
+            expect(index.get()).toBe(50);
         });
     });
 
@@ -278,9 +278,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const largerThan0 = computed(() => roArray.every(v => v > 0));
-            expect(largerThan0()).toBe(true);
+            expect(largerThan0.get()).toBe(true);
             array.push(0);
-            expect(largerThan0()).toBe(false);
+            expect(largerThan0.get()).toBe(false);
         });
     });
 
@@ -315,9 +315,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const largerThan0 = computed(() => roArray.some(v => v > 3));
-            expect(largerThan0()).toBe(false);
+            expect(largerThan0.get()).toBe(false);
             array.push(4);
-            expect(largerThan0()).toBe(true);
+            expect(largerThan0.get()).toBe(true);
         });
     });
 
@@ -348,9 +348,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const sum = computed(() => { let sum = 0; roArray.forEach(v => sum += v); return sum; });
-            expect(sum()).toBe(6);
+            expect(sum.get()).toBe(6);
             array.push(4);
-            expect(sum()).toBe(10);
+            expect(sum.get()).toBe(10);
         });
     });
 
@@ -379,9 +379,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const sum = computed(() => roArray.map(v => v * 10));
-            expect(sum()).toEqual([ 10, 20, 30 ]);
+            expect(sum.get()).toEqual([ 10, 20, 30 ]);
             array.push(4);
-            expect(sum()).toEqual([ 10, 20, 30, 40 ]);
+            expect(sum.get()).toEqual([ 10, 20, 30, 40 ]);
         });
     });
 
@@ -410,9 +410,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4 ]);
             const roArray = array.asReadonly();
             const odd = computed(() => roArray.filter(v => v % 2 === 1));
-            expect(odd()).toEqual([ 1, 3 ]);
+            expect(odd.get()).toEqual([ 1, 3 ]);
             array.push(5);
-            expect(odd()).toEqual([ 1, 3, 5 ]);
+            expect(odd.get()).toEqual([ 1, 3, 5 ]);
         });
     });
 
@@ -448,9 +448,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4 ]);
             const roArray = array.asReadonly();
             const sum = computed(() => roArray.reduce((sum, v) => sum + v));
-            expect(sum()).toBe(10);
+            expect(sum.get()).toBe(10);
             array.push(5);
-            expect(sum()).toBe(15);
+            expect(sum.get()).toBe(15);
         });
     });
 
@@ -486,9 +486,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ "1", "2", "3", "4" ]);
             const roArray = array.asReadonly();
             const sum = computed(() => roArray.reduceRight((sum, v) => sum + v));
-            expect(sum()).toBe("4321");
+            expect(sum.get()).toBe("4321");
             array.push("5");
-            expect(sum()).toBe("54321");
+            expect(sum.get()).toBe("54321");
         });
     });
 
@@ -525,11 +525,11 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ "a", "b", "c" ]);
             const roArray = array.asReadonly();
             const found = computed(() => roArray.find(v => v === "c"));
-            expect(found()).toBe("c");
+            expect(found.get()).toBe("c");
             array.pop();
-            expect(found()).toBe(undefined);
+            expect(found.get()).toBe(undefined);
             array.unshift("c");
-            expect(found()).toBe("c");
+            expect(found.get()).toBe("c");
         });
     });
 
@@ -566,13 +566,13 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ "a", "b", "c" ]);
             const roArray = array.asReadonly();
             const found = computed(() => roArray.findIndex(v => v === "c"));
-            expect(found()).toBe(2);
+            expect(found.get()).toBe(2);
             array.unshift("test");
-            expect(found()).toBe(3);
+            expect(found.get()).toBe(3);
             array.pop();
-            expect(found()).toBe(-1);
+            expect(found.get()).toBe(-1);
             array.unshift("c");
-            expect(found()).toBe(0);
+            expect(found.get()).toBe(0);
         });
     });
 
@@ -591,9 +591,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const sum = computed(() => { let sum = 0; for (const [ , value ] of roArray.entries()) { sum += value; }; return sum; });
-            expect(sum()).toBe(6);
+            expect(sum.get()).toBe(6);
             array.push(4);
-            expect(sum()).toBe(10);
+            expect(sum.get()).toBe(10);
         });
     });
 
@@ -611,9 +611,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const sum = computed(() => { let sum = 0; for (const index of roArray.keys()) { sum += index; }; return sum; });
-            expect(sum()).toBe(3);
+            expect(sum.get()).toBe(3);
             array.push(4);
-            expect(sum()).toBe(6);
+            expect(sum.get()).toBe(6);
         });
     });
 
@@ -631,9 +631,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const sum = computed(() => { let sum = 0; for (const value of roArray.values()) { sum += value; }; return sum; });
-            expect(sum()).toBe(6);
+            expect(sum.get()).toBe(6);
             array.push(4);
-            expect(sum()).toBe(10);
+            expect(sum.get()).toBe(10);
         });
     });
 
@@ -658,11 +658,11 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2 ]);
             const roArray = array.asReadonly();
             const contains = computed(() => roArray.includes(2));
-            expect(contains()).toBe(true);
+            expect(contains.get()).toBe(true);
             array.pop();
-            expect(contains()).toBe(false);
+            expect(contains.get()).toBe(false);
             array.unshift(2);
-            expect(contains()).toBe(true);
+            expect(contains.get()).toBe(true);
         });
     });
 
@@ -691,9 +691,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const sum = computed(() => roArray.flatMap(v => [ v * 10 ]));
-            expect(sum()).toEqual([ 10, 20, 30 ]);
+            expect(sum.get()).toEqual([ 10, 20, 30 ]);
             array.push(4);
-            expect(sum()).toEqual([ 10, 20, 30, 40 ]);
+            expect(sum.get()).toEqual([ 10, 20, 30, 40 ]);
         });
     });
 
@@ -722,9 +722,9 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             const first = computed(() => roArray.at(0));
-            expect(first()).toEqual(1);
+            expect(first.get()).toEqual(1);
             array.unshift(4);
-            expect(first()).toEqual(4);
+            expect(first.get()).toEqual(4);
         });
     });
     it("is iterable", () => {
@@ -740,8 +740,8 @@ describe("ReadonlyArraySignal", () => {
         const array = new WritableArraySignal([ 1, 2, 3 ]);
         const roArray = array.asReadonly();
         const sum = computed(() => { let sum = 0; for (const value of roArray) { sum += value; }; return sum; });
-        expect(sum()).toBe(6);
+        expect(sum.get()).toBe(6);
         array.push(4);
-        expect(sum()).toBe(10);
+        expect(sum.get()).toBe(10);
     });
 });

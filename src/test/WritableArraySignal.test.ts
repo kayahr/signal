@@ -16,7 +16,7 @@ import { arraySignal } from "../main/WritableArraySignal.js";
 
 describe("WritableArraySignal", () => {
     it("can be called as a function to read the array", () => {
-        expect(new WritableArraySignal([ "my value" ])()).toEqual([ "my value" ]);
+        expect(new WritableArraySignal([ "my value" ]).get()).toEqual([ "my value" ]);
     });
     it("uses empty array if no elements specified", () => {
         const array = new WritableArraySignal();
@@ -206,9 +206,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1 ]);
             const len = computed(() => array.length * 10);
-            expect(len()).toBe(10);
+            expect(len.get()).toBe(10);
             array.push(2);
-            expect(len()).toBe(20);
+            expect(len.get()).toBe(20);
         });
     });
 
@@ -216,14 +216,14 @@ describe("WritableArraySignal", () => {
         it("pops last value from array", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             expect(array.pop()).toBe(3);
-            expect(array()).toEqual([ 1, 2 ]);
+            expect(array.get()).toEqual([ 1, 2 ]);
             expect(array.pop()).toBe(2);
-            expect(array()).toEqual([ 1 ]);
+            expect(array.get()).toEqual([ 1 ]);
         });
         it("returns undefined when array is empty", () => {
             const array = new WritableArraySignal([]);
             expect(array.pop()).toBe(undefined);
-            expect(array()).toEqual([]);
+            expect(array.get()).toEqual([]);
         });
         it("triggers dependency updates when array changed", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
@@ -247,14 +247,14 @@ describe("WritableArraySignal", () => {
         it("pushes new values to array and returns new length", () => {
             const array = new WritableArraySignal<number>([]);
             expect(array.push(1, 2)).toBe(2);
-            expect(array()).toEqual([ 1, 2 ]);
+            expect(array.get()).toEqual([ 1, 2 ]);
             expect(array.push(3)).toBe(3);
-            expect(array()).toEqual([ 1, 2, 3 ]);
+            expect(array.get()).toEqual([ 1, 2, 3 ]);
         });
         it("does nothing when nothing is added", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             expect(array.push()).toBe(3);
-            expect(array()).toEqual([ 1, 2, 3 ]);
+            expect(array.get()).toEqual([ 1, 2, 3 ]);
         });
         it("triggers dependency updates when array changed", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
@@ -285,14 +285,14 @@ describe("WritableArraySignal", () => {
         it("does not modify the signal array", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             expect(array.concat([ 4, 5 ])).toEqual([ 1, 2, 3, 4, 5 ]);
-            expect(array()).toEqual([ 1, 2, 3 ]);
+            expect(array.get()).toEqual([ 1, 2, 3 ]);
         });
         it("tracks signal as dependency", () => {
             const a1 = new WritableArraySignal<number | string>([ 1 ]);
             const a2 = computed(() => a1.concat([ "End" ]));
-            expect(a2()).toEqual([ 1, "End" ]);
+            expect(a2.get()).toEqual([ 1, "End" ]);
             a1.push(2);
-            expect(a2()).toEqual([ 1, 2, "End" ]);
+            expect(a2.get()).toEqual([ 1, 2, "End" ]);
         });
     });
 
@@ -308,9 +308,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1 ]);
             const string = computed(() => `<${array.join(":")}>`);
-            expect(string()).toBe("<1>");
+            expect(string.get()).toBe("<1>");
             array.push(2);
-            expect(string()).toBe("<1:2>");
+            expect(string.get()).toBe("<1:2>");
         });
     });
 
@@ -318,9 +318,9 @@ describe("WritableArraySignal", () => {
         it("reverses the array", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             expect(array.reverse()).toBe(array);
-            expect(array()).toEqual([ 3, 2, 1 ]);
+            expect(array.get()).toEqual([ 3, 2, 1 ]);
             expect(array.reverse()).toBe(array);
-            expect(array()).toEqual([ 1, 2, 3 ]);
+            expect(array.get()).toEqual([ 1, 2, 3 ]);
         });
         it("does nothing when array has only one element", () => {
             const array = new WritableArraySignal([ 1 ]);
@@ -352,14 +352,14 @@ describe("WritableArraySignal", () => {
         it("shifts first value from array", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             expect(array.shift()).toBe(1);
-            expect(array()).toEqual([ 2, 3 ]);
+            expect(array.get()).toEqual([ 2, 3 ]);
             expect(array.shift()).toBe(2);
-            expect(array()).toEqual([ 3 ]);
+            expect(array.get()).toEqual([ 3 ]);
         });
         it("returns undefined when array is empty", () => {
             const array = new WritableArraySignal([]);
             expect(array.shift()).toBe(undefined);
-            expect(array()).toEqual([]);
+            expect(array.get()).toEqual([]);
         });
         it("triggers dependency updates when array changed", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
@@ -400,12 +400,12 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5 ]);
             const sub = computed(() => array.slice(1, 3));
-            expect(sub()).toEqual([ 2, 3 ]);
+            expect(sub.get()).toEqual([ 2, 3 ]);
             array.unshift(0);
-            expect(sub()).toEqual([ 1, 2 ]);
+            expect(sub.get()).toEqual([ 1, 2 ]);
             array.shift();
             array.shift();
-            expect(sub()).toEqual([ 3, 4 ]);
+            expect(sub.get()).toEqual([ 3, 4 ]);
         });
     });
 
@@ -413,12 +413,12 @@ describe("WritableArraySignal", () => {
         it("sorts the array alphabetically if no compare function given", () => {
             const array = new WritableArraySignal([ "c", "a", "b" ]);
             expect(array.sort()).toBe(array);
-            expect(array()).toEqual([ "a", "b", "c" ]);
+            expect(array.get()).toEqual([ "a", "b", "c" ]);
         });
         it("sorts the array by given compare function", () => {
             const array = new WritableArraySignal([ 2, 1, 3 ]);
             expect(array.sort((a, b) => b - a)).toBe(array);
-            expect(array()).toEqual([ 3, 2, 1 ]);
+            expect(array.get()).toEqual([ 3, 2, 1 ]);
         });
         it("does nothing when array has only one element", () => {
             const array = new WritableArraySignal([ 1 ]);
@@ -450,22 +450,22 @@ describe("WritableArraySignal", () => {
         it("splices elements out of the array", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5 ]);
             expect(array.splice(1, 3)).toEqual([ 2, 3, 4 ]);
-            expect(array()).toEqual([ 1, 5 ]);
+            expect(array.get()).toEqual([ 1, 5 ]);
         });
         it("inserts new elements at spliced-out section", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5, 6 ]);
             expect(array.splice(1, 2, 10, 20)).toEqual([ 2, 3 ]);
-            expect(array()).toEqual([ 1, 10, 20, 4, 5, 6 ]);
+            expect(array.get()).toEqual([ 1, 10, 20, 4, 5, 6 ]);
         });
         it("can splice from the back", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5, 6 ]);
             expect(array.splice(-3, 2)).toEqual([ 4, 5 ]);
-            expect(array()).toEqual([ 1, 2, 3, 6 ]);
+            expect(array.get()).toEqual([ 1, 2, 3, 6 ]);
         });
         it("can insert at the back when index is after end", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5, 6 ]);
             expect(array.splice(10, 0, 10, 20)).toEqual([]);
-            expect(array()).toEqual([ 1, 2, 3, 4, 5, 6, 10, 20 ]);
+            expect(array.get()).toEqual([ 1, 2, 3, 4, 5, 6, 10, 20 ]);
         });
         it("triggers dependency updates when array may have changed", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
@@ -497,14 +497,14 @@ describe("WritableArraySignal", () => {
         it("inserts new values to beginning if array and returns new length", () => {
             const array = new WritableArraySignal<number>([ 0 ]);
             expect(array.unshift(1, 2)).toBe(3);
-            expect(array()).toEqual([ 1, 2, 0 ]);
+            expect(array.get()).toEqual([ 1, 2, 0 ]);
             expect(array.unshift(3)).toBe(4);
-            expect(array()).toEqual([ 3, 1, 2, 0 ]);
+            expect(array.get()).toEqual([ 3, 1, 2, 0 ]);
         });
         it("does nothing when nothing is added", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             expect(array.unshift()).toBe(3);
-            expect(array()).toEqual([ 1, 2, 3 ]);
+            expect(array.get()).toEqual([ 1, 2, 3 ]);
         });
         it("triggers dependency updates when array changed", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
@@ -545,9 +545,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 3, 2, 1 ]);
             const index = computed(() => array.indexOf(2) * 10);
-            expect(index()).toBe(10);
+            expect(index.get()).toBe(10);
             array.unshift(4);
-            expect(index()).toBe(20);
+            expect(index.get()).toBe(20);
         });
     });
 
@@ -573,9 +573,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 3, 2, 1 ]);
             const index = computed(() => array.lastIndexOf(2) * 10);
-            expect(index()).toBe(40);
+            expect(index.get()).toBe(40);
             array.unshift(4);
-            expect(index()).toBe(50);
+            expect(index.get()).toBe(50);
         });
     });
 
@@ -605,9 +605,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const largerThan0 = computed(() => array.every(v => v > 0));
-            expect(largerThan0()).toBe(true);
+            expect(largerThan0.get()).toBe(true);
             array.push(0);
-            expect(largerThan0()).toBe(false);
+            expect(largerThan0.get()).toBe(false);
         });
     });
 
@@ -637,9 +637,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const largerThan0 = computed(() => array.some(v => v > 3));
-            expect(largerThan0()).toBe(false);
+            expect(largerThan0.get()).toBe(false);
             array.push(4);
-            expect(largerThan0()).toBe(true);
+            expect(largerThan0.get()).toBe(true);
         });
     });
 
@@ -667,9 +667,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const sum = computed(() => { let sum = 0; array.forEach(v => sum += v); return sum; });
-            expect(sum()).toBe(6);
+            expect(sum.get()).toBe(6);
             array.push(4);
-            expect(sum()).toBe(10);
+            expect(sum.get()).toBe(10);
         });
     });
 
@@ -695,9 +695,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const sum = computed(() => array.map(v => v * 10));
-            expect(sum()).toEqual([ 10, 20, 30 ]);
+            expect(sum.get()).toEqual([ 10, 20, 30 ]);
             array.push(4);
-            expect(sum()).toEqual([ 10, 20, 30, 40 ]);
+            expect(sum.get()).toEqual([ 10, 20, 30, 40 ]);
         });
     });
 
@@ -723,9 +723,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4 ]);
             const odd = computed(() => array.filter(v => v % 2 === 1));
-            expect(odd()).toEqual([ 1, 3 ]);
+            expect(odd.get()).toEqual([ 1, 3 ]);
             array.push(5);
-            expect(odd()).toEqual([ 1, 3, 5 ]);
+            expect(odd.get()).toEqual([ 1, 3, 5 ]);
         });
     });
 
@@ -757,9 +757,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4 ]);
             const sum = computed(() => array.reduce((sum, v) => sum + v));
-            expect(sum()).toBe(10);
+            expect(sum.get()).toBe(10);
             array.push(5);
-            expect(sum()).toBe(15);
+            expect(sum.get()).toBe(15);
         });
     });
 
@@ -791,9 +791,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ "1", "2", "3", "4" ]);
             const sum = computed(() => array.reduceRight((sum, v) => sum + v));
-            expect(sum()).toBe("4321");
+            expect(sum.get()).toBe("4321");
             array.push("5");
-            expect(sum()).toBe("54321");
+            expect(sum.get()).toBe("54321");
         });
     });
 
@@ -826,11 +826,11 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ "a", "b", "c" ]);
             const found = computed(() => array.find(v => v === "c"));
-            expect(found()).toBe("c");
+            expect(found.get()).toBe("c");
             array.pop();
-            expect(found()).toBe(undefined);
+            expect(found.get()).toBe(undefined);
             array.unshift("c");
-            expect(found()).toBe("c");
+            expect(found.get()).toBe("c");
         });
     });
 
@@ -863,13 +863,13 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ "a", "b", "c" ]);
             const found = computed(() => array.findIndex(v => v === "c"));
-            expect(found()).toBe(2);
+            expect(found.get()).toBe(2);
             array.unshift("test");
-            expect(found()).toBe(3);
+            expect(found.get()).toBe(3);
             array.pop();
-            expect(found()).toBe(-1);
+            expect(found.get()).toBe(-1);
             array.unshift("c");
-            expect(found()).toBe(0);
+            expect(found.get()).toBe(0);
         });
     });
 
@@ -877,27 +877,27 @@ describe("WritableArraySignal", () => {
         it("fills complete array if no start and end given", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             expect(array.fill(4)).toBe(array);
-            expect(array()).toEqual([ 4, 4, 4 ]);
+            expect(array.get()).toEqual([ 4, 4, 4 ]);
         });
         it("fills part of the array when start index is given", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5 ]);
             expect(array.fill(6, 2)).toBe(array);
-            expect(array()).toEqual([ 1, 2, 6, 6, 6 ]);
+            expect(array.get()).toEqual([ 1, 2, 6, 6, 6 ]);
         });
         it("fills part of the array when negative start index is given", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5 ]);
             expect(array.fill(6, -2)).toBe(array);
-            expect(array()).toEqual([ 1, 2, 3, 6, 6 ]);
+            expect(array.get()).toEqual([ 1, 2, 3, 6, 6 ]);
         });
         it("fills part of the array when start and end index is given", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5 ]);
             expect(array.fill(6, 1, 3)).toBe(array);
-            expect(array()).toEqual([ 1, 6, 6, 4, 5 ]);
+            expect(array.get()).toEqual([ 1, 6, 6, 4, 5 ]);
         });
         it("fills part of the array when start and negative end index is given", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5 ]);
             expect(array.fill(6, 1, -1)).toBe(array);
-            expect(array()).toEqual([ 1, 6, 6, 6, 5 ]);
+            expect(array.get()).toEqual([ 1, 6, 6, 6, 5 ]);
         });
         it("triggers dependency updates when array may have changed", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
@@ -913,12 +913,12 @@ describe("WritableArraySignal", () => {
         it("copies data within the array within end index", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5, 6 ]);
             expect(array.copyWithin(0, 3)).toBe(array);
-            expect(array()).toEqual([ 4, 5, 6, 4, 5, 6 ]);
+            expect(array.get()).toEqual([ 4, 5, 6, 4, 5, 6 ]);
         });
         it("copies data within the array with end index", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5, 6 ]);
             expect(array.copyWithin(3, 0, 3)).toBe(array);
-            expect(array()).toEqual([ 1, 2, 3, 1, 2, 3 ]);
+            expect(array.get()).toEqual([ 1, 2, 3, 1, 2, 3 ]);
         });
         it("triggers dependency updates when array may have changed", () => {
             const array = new WritableArraySignal([ 1, 2, 3, 4, 5, 6 ]);
@@ -943,9 +943,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const sum = computed(() => { let sum = 0; for (const [ , value ] of array.entries()) { sum += value; }; return sum; });
-            expect(sum()).toBe(6);
+            expect(sum.get()).toBe(6);
             array.push(4);
-            expect(sum()).toBe(10);
+            expect(sum.get()).toBe(10);
         });
     });
 
@@ -961,9 +961,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const sum = computed(() => { let sum = 0; for (const index of array.keys()) { sum += index; }; return sum; });
-            expect(sum()).toBe(3);
+            expect(sum.get()).toBe(3);
             array.push(4);
-            expect(sum()).toBe(6);
+            expect(sum.get()).toBe(6);
         });
     });
 
@@ -979,9 +979,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const sum = computed(() => { let sum = 0; for (const value of array.values()) { sum += value; }; return sum; });
-            expect(sum()).toBe(6);
+            expect(sum.get()).toBe(6);
             array.push(4);
-            expect(sum()).toBe(10);
+            expect(sum.get()).toBe(10);
         });
     });
 
@@ -1003,11 +1003,11 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2 ]);
             const contains = computed(() => array.includes(2));
-            expect(contains()).toBe(true);
+            expect(contains.get()).toBe(true);
             array.pop();
-            expect(contains()).toBe(false);
+            expect(contains.get()).toBe(false);
             array.unshift(2);
-            expect(contains()).toBe(true);
+            expect(contains.get()).toBe(true);
         });
     });
 
@@ -1033,9 +1033,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const sum = computed(() => array.flatMap(v => [ v * 10 ]));
-            expect(sum()).toEqual([ 10, 20, 30 ]);
+            expect(sum.get()).toEqual([ 10, 20, 30 ]);
             array.push(4);
-            expect(sum()).toEqual([ 10, 20, 30, 40 ]);
+            expect(sum.get()).toEqual([ 10, 20, 30, 40 ]);
         });
     });
 
@@ -1060,9 +1060,9 @@ describe("WritableArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const first = computed(() => array.at(0));
-            expect(first()).toEqual(1);
+            expect(first.get()).toEqual(1);
             array.unshift(4);
-            expect(first()).toEqual(4);
+            expect(first.get()).toEqual(4);
         });
     });
     it("is iterable", () => {
@@ -1076,9 +1076,9 @@ describe("WritableArraySignal", () => {
     it("tracks signal as dependency when iterated", () => {
         const array = new WritableArraySignal([ 1, 2, 3 ]);
         const sum = computed(() => { let sum = 0; for (const value of array) { sum += value; }; return sum; });
-        expect(sum()).toBe(6);
+        expect(sum.get()).toBe(6);
         array.push(4);
-        expect(sum()).toBe(10);
+        expect(sum.get()).toBe(10);
     });
 
     describe("from", () => {

@@ -49,22 +49,22 @@ describe("untracked", () => {
     it("returns the given signal value without dependency tracking", () => {
         const value = signal(10);
         const double = computed(() => untracked(value) * 2);
-        expect(double()).toBe(20);
+        expect(double.get()).toBe(20);
         value.set(100);
-        expect(double()).toBe(20);
+        expect(double.get()).toBe(20);
     });
     it("returns the value of given non-callable signal without dependency tracking", () => {
         const value = new RxjsSignal(10);
         const double = computed(() => untracked(value) * 2);
-        expect(double()).toBe(20);
+        expect(double.get()).toBe(20);
         value.set(100);
-        expect(double()).toBe(20);
+        expect(double.get()).toBe(20);
     });
     it("runs the given function without dependency tracking", () => {
         const value = signal(10);
-        const double = computed(() => untracked(() => value() * 2));
-        expect(double()).toBe(20);
+        const double = computed(() => untracked(() => value.get() * 2));
+        expect(double.get()).toBe(20);
         value.set(100);
-        expect(double()).toBe(20);
+        expect(double.get()).toBe(20);
     });
 });

@@ -15,7 +15,7 @@ import { WritableSignal } from "../main/WritableSignal.js";
 describe("ReadonlySignal", () => {
     it("can be called as a getter function", () => {
         const value = new ReadonlySignal(new WritableSignal(20));
-        expect(value()).toBe(20);
+        expect(value.get()).toBe(20);
     });
     it("can be observed for changes on the wrapped value", () => {
         const a = new WritableSignal(10);

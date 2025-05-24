@@ -31,12 +31,13 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements 
         super(elements, { ...options, equal: () => false });
         this.elements = elements;
         this.equal = equal;
+    }
 
-        // Have to define length as instance property getter to override the length property set by Callable function
-        Object.defineProperty(this, "length", {
-            get: () => this.get().length,
-            configurable: false
-        });
+    /**
+     * @returns The array length.
+     */
+    public get length(): number {
+        return this.get().length;
     }
 
     /**

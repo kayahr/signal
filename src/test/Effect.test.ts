@@ -17,7 +17,7 @@ describe("Effect", () => {
         const value = signal(10);
         const fn = vi.fn((a: number) => {});
         const context = new Context();
-        context.runInContext(() => new Effect(() => fn(value() * 2)));
+        context.runInContext(() => new Effect(() => fn(value.get() * 2)));
 
         // Initial call ob compute and observer
         expect(fn).toHaveBeenCalledOnce();
@@ -39,16 +39,16 @@ describe("Effect", () => {
     it("is executed once on creation", () => {
         const value = signal(10);
         const fn = vi.fn((a: number): void => {});
-        effect(() => fn(value() * 2));
+        effect(() => fn(value.get() * 2));
         expect(fn).toHaveBeenCalledOnce();
         expect(fn).toHaveBeenCalledWith(20);
     });
 
     it("is executed on every sub dependency change", () => {
         const a = signal({});
-        const b = computed(() => a());
+        const b = computed(() => a.get());
         const fn = vi.fn();
-        effect(() => { fn(b()); });
+        effect(() => { fn(b.get()); });
         expect(fn).toHaveBeenCalledOnce();
         expect(fn.mock.calls[0]).toEqual([ {} ]);
         fn.mockClear();
@@ -67,7 +67,7 @@ describe("Effect", () => {
         const a = signal(1);
         const b = signal(2);
         const fn = vi.fn((a: number): void => {});
-        effect(() => fn((toggle() ? a() : b()) * 2));
+        effect(() => fn((toggle.get() ? a.get() : b.get()) * 2));
 
         // Initial computation
         expect(fn).toHaveBeenCalledOnce();
@@ -113,7 +113,7 @@ describe("Effect", () => {
     it("does not track dependencies in cleanup function", () => {
         const a = signal(1);
         const b = signal(2);
-        const cleanup = vi.fn(() => b());
+        const cleanup = vi.fn(() => b.get());
         effect(() => { a.get(); return cleanup; });
         expect(cleanup).not.toHaveBeenCalled();
         a.set(2);
@@ -127,7 +127,7 @@ describe("Effect", () => {
         it("destroys the effect", () => {
             const value = signal(10);
             const fn = vi.fn((a: number) => {});
-            const effectRef = effect(() => fn(value() * 2));
+            const effectRef = effect(() => fn(value.get() * 2));
 
             // Initial call ob compute and observer
             expect(fn).toHaveBeenCalledOnce();

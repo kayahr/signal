@@ -7,14 +7,12 @@ import "symbol-observable";
 
 import type { InteropSubscribable, Observer, Unsubscribable } from "@kayahr/observable";
 
-import { Callable } from "./Callable.js";
-import type { CallableSignal } from "./CallableSignal.js";
 import type { Signal } from "./Signal.js";
 
 /**
  * Readonly wrapper for a signal.
  */
-export class ReadonlySignal<T = unknown> extends Callable<[], T> implements CallableSignal<T> {
+export class ReadonlySignal<T = unknown> implements Signal<T> {
     /** The wrapped signal. */
     private readonly signal: Signal<T>;
 
@@ -24,7 +22,6 @@ export class ReadonlySignal<T = unknown> extends Callable<[], T> implements Call
      * @param signal - The signal to wrap.
      */
     public constructor(signal: Signal<T>) {
-        super(() => this.get());
         this.signal = signal;
     }
 

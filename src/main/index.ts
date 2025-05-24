@@ -5,7 +5,6 @@
 
 export { atomic } from "./atomic.js";
 export { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
-export { type CallableSignal } from "./CallableSignal.js";
 export { computed, ComputedSignal, type ComputeFunction } from "./ComputedSignal.js";
 export { track, untracked } from "./Dependencies.js";
 export { type Destroyable } from "./Destroyable.js";

@@ -14,7 +14,7 @@ import { Context } from "./support/Context.js";
 describe("ComputedSignal", () => {
     it("is destroyed via signal context if present", () => {
         const value = signal(10);
-        const compute = vi.fn(() => value() * 2);
+        const compute = vi.fn(() => value.get() * 2);
         const context = new Context();
         const double = context.runInContext(() => new ComputedSignal(compute));
         const observer = vi.fn();
@@ -47,7 +47,7 @@ describe("ComputedSignal", () => {
 
     it("updates the computed value immediately when observed", () => {
         const value = signal(1);
-        const compute = vi.fn(() => value() * 2);
+        const compute = vi.fn(() => value.get() * 2);
         const double = computed(compute);
 
         // No computation before subscription
@@ -87,10 +87,10 @@ describe("ComputedSignal", () => {
 
     it("can observe changes over multiple levels", () => {
         const a = signal(1);
-        const b = computed(() => a());
-        const c = computed(() => b());
-        const d = computed(() => c());
-        const e = computed(() => d());
+        const b = computed(() => a.get());
+        const c = computed(() => b.get());
+        const d = computed(() => c.get());
+        const e = computed(() => d.get());
         const fn = vi.fn();
         e.subscribe(fn);
         expect(fn).toHaveBeenCalledExactlyOnceWith(1);
@@ -109,38 +109,38 @@ describe("ComputedSignal", () => {
         const toggle = signal(true);
         const a = signal(1);
         const b = signal(2);
-        const compute = vi.fn(() => toggle() ? a() : b());
+        const compute = vi.fn(() => toggle.get() ? a.get() : b.get());
         const c = computed(compute);
 
         // Initial computation
-        expect(c()).toBe(1);
+        expect(c.get()).toBe(1);
         compute.mockClear();
 
         // No-recomputation when b is changed because b is not (yet) a dependency
         b.set(3);
-        expect(c()).toBe(1);
+        expect(c.get()).toBe(1);
         expect(compute).not.toHaveBeenCalled();
 
         // Recomputation because a changed
         a.set(4);
-        expect(c()).toBe(4);
+        expect(c.get()).toBe(4);
         expect(compute).toHaveBeenCalled();
         compute.mockClear();
 
         // Recomputation because toggle changed
         toggle.set(false);
-        expect(c()).toBe(3);
+        expect(c.get()).toBe(3);
         expect(compute).toHaveBeenCalled();
         compute.mockClear();
 
         // No-recomputation when a is changed because a is no longer a dependency
         a.set(7);
-        expect(c()).toBe(3);
+        expect(c.get()).toBe(3);
         expect(compute).not.toHaveBeenCalled();
 
         // Recomputation because b changed
         b.set(10);
-        expect(c()).toBe(10);
+        expect(c.get()).toBe(10);
         expect(compute).toHaveBeenCalled();
         compute.mockClear();
     });
@@ -152,7 +152,7 @@ describe("ComputedSignal", () => {
         });
         it("updates the computed value only if necessary", () => {
             const value = signal(1);
-            const compute = vi.fn(() => value() * 2);
+            const compute = vi.fn(() => value.get() * 2);
             const double = computed(compute);
             expect(compute).not.toHaveBeenCalled();
             expect(double.get()).toBe(2);
@@ -170,14 +170,14 @@ describe("ComputedSignal", () => {
             expect(() => signal.get()).toThrowError(new Error("Computed signal has been destroyed"));
         });
         it("throws error on circular dependency", () => {
-            const a = computed((): number => b());
-            const b = computed((): number => c());
-            const c = computed((): number => a());
+            const a = computed((): number => b.get());
+            const b = computed((): number => c.get());
+            const c = computed((): number => a.get());
             expect(() => b.get()).toThrowError(new Error("Circular dependency detected during computed signal computation"));
         });
         it("calls the compute function again after a dependency has changed but does not update the version when value is the same", () => {
             const input = signal(1);
-            const compute = vi.fn(() => input() < 10);
+            const compute = vi.fn(() => input.get() < 10);
             const output = new ComputedSignal(compute);
             expect(output.get()).toBe(true);
             const version = output.getVersion();
@@ -189,7 +189,7 @@ describe("ComputedSignal", () => {
         });
         it("calls the compute function again after a dependency has changed and increases the version when value has changed", () => {
             const input = signal(1);
-            const compute = vi.fn(() => input() < 10);
+            const compute = vi.fn(() => input.get() < 10);
             const output = computed(compute);
             expect(output.get()).toBe(true);
             const version = output.getVersion();
@@ -204,7 +204,7 @@ describe("ComputedSignal", () => {
     describe("destroy", () => {
         it("destroys the signal", () => {
             const value = signal(10);
-            const compute = vi.fn(() => value() * 2);
+            const compute = vi.fn(() => value.get() * 2);
             const double = new ComputedSignal(compute);
             const observer = vi.fn();
 
@@ -237,17 +237,17 @@ describe("ComputedSignal", () => {
 
     it("is garbage collected correctly when no longer referenced", async () => {
         const a = signal(1);
-        const b = computed(() => a() * 2);
-        let c: ComputedSignal<number> | null = new ComputedSignal(() => a() + b());
-        expect(c()).toBe(3);
+        const b = computed(() => a.get() * 2);
+        let c: ComputedSignal<number> | null = new ComputedSignal(() => a.get() + b.get());
+        expect(c.get()).toBe(3);
         await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
     });
 
     it("is garbage collected correctly after last observer is unsubscribed", async () => {
         const a = signal(1);
-        const b = computed(() => a() * 2);
-        let c: ComputedSignal<number> | null = new ComputedSignal(() => a() + b());
-        expect(c()).toBe(3);
+        const b = computed(() => a.get() * 2);
+        let c: ComputedSignal<number> | null = new ComputedSignal(() => a.get() + b.get());
+        expect(c.get()).toBe(3);
         c.subscribe(() => {}).unsubscribe();
         await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
     });

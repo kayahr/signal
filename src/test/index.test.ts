@@ -7,7 +7,6 @@ import { describe, expect, it } from "vitest";
 
 import { atomic } from "../main/atomic.js";
 import { BaseSignal, type BaseSignalOptions } from "../main/BaseSignal.js";
-import { type CallableSignal } from "../main/CallableSignal.js";
 import { computed, ComputedSignal, type ComputeFunction } from "../main/ComputedSignal.js";
 import { track, untracked } from "../main/Dependencies.js";
 import { type Destroyable } from "../main/Destroyable.js";
@@ -47,7 +46,6 @@ describe("index", () => {
 
         // Interfaces and types can only be checked by TypeScript
         ((): BaseSignalOptions => (({} as exports.BaseSignalOptions)))();
-        ((): CallableSignal => (({} as exports.CallableSignal)))();
         ((): CleanupFunction => (({} as exports.CleanupFunction)))();
         ((): EffectFunction => (({} as exports.EffectFunction)))();
         ((): ComputeFunction => (({} as exports.ComputeFunction)))();

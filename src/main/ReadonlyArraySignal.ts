@@ -20,12 +20,13 @@ export class ReadonlyArraySignal<T> extends ReadonlySignal<readonly T[]> impleme
      */
     public constructor(signal: Signal<readonly T[]>) {
         super(signal);
+    }
 
-        // Have to define length as instance property getter to override the length property set by Callable function
-        Object.defineProperty(this, "length", {
-            get: () => this.get().length,
-            configurable: false
-        });
+    /**
+     * @returns The array length.
+     */
+    public get length(): number {
+        return this.get().length;
     }
 
     public concat(...items: Array<ConcatArray<T>>): T[];

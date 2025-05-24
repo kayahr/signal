@@ -15,7 +15,7 @@ import { signal, WritableSignal } from "../main/WritableSignal.js";
 
 describe("WritableSignal", () => {
     it("can be called as a function to read the value", () => {
-        expect(new WritableSignal("my value")()).toBe("my value");
+        expect(new WritableSignal("my value").get()).toBe("my value");
     });
 
     it("handles multiple subscribers correctly", () => {
@@ -220,11 +220,11 @@ describe("WritableSignal", () => {
         });
         it("does not affect synchronous getter calls", () => {
             const value = signal(0, { throttle: 1000 });
-            const double = computed(() => value() * 2);
+            const double = computed(() => value.get() * 2);
             value.set(1);
-            expect(double()).toBe(2);
+            expect(double.get()).toBe(2);
             value.set(2);
-            expect(double()).toBe(4);
+            expect(double.get()).toBe(4);
         });
     });
 

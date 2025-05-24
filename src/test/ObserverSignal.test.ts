@@ -37,7 +37,7 @@ describe("ObserverSignal", () => {
             let next: (v: string) => void = () => {};
             const observable = new Observable<string>(observer => { next = v => observer.next(v); });
             const signal = ObserverSignal.from(observable, { initialValue: "init" });
-            ((v: string) => v)(signal()); // Compile-time check to ensure signal value type is string without undefined
+            ((v: string) => v)(signal.get()); // Compile-time check to ensure signal value type is string without undefined
             expect(signal.get()).toBe("init");
             next("test");
             expect(signal.get()).toBe("test");
@@ -129,7 +129,7 @@ describe("toSignal", () => {
         let next: (v: string) => void = () => {};
         const observable = new Observable<string>(observer => { next = v => observer.next(v); });
         const signal = toSignal(observable, { initialValue: "init" });
-        ((v: string) => v)(signal()); // Compile-time check to ensure signal value type is string without undefined
+        ((v: string) => v)(signal.get()); // Compile-time check to ensure signal value type is string without undefined
         expect(signal.get()).toBe("init");
         next("test");
         expect(signal.get()).toBe("test");
