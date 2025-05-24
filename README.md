@@ -2,7 +2,7 @@
 
 [GitHub] | [NPM] | [API Doc]
 
-This is a standalone signal implementation inspired by [Angular Signals] (which API it closely follows) and JavaFX's [Observable Values]. This signal implementation is framework- and platform-agnostic (works in browsers and Node.js) and is simply based on [observables] for dependency watching.
+This is a standalone signal implementation inspired by [Angular Signals] and JavaFX's [Observable Values]. This signal implementation is framework- and platform-agnostic (works in browsers and Node.js) and is simply based on [observables] for dependency watching.
 
 
 ## Writable signals
@@ -18,15 +18,14 @@ const signalA = signal(1);
 const signalB = new WritableSignal(2);
 ```
 
-A signal value can be read with either the `get()` method or by calling the signal as a function:
+A signal value can be read with the `get()` method:
 
 ```typescript
 const count = signal(1);
 console.log(count.get());
-console.log(count());
 ```
 
-A signal value can be set with the `set()` method or with the `update()` method:
+A signal value can be set with the `set()` method or modified based on the current value with the `update()` method:
 
 ```typescript
 const count = signal(1);
@@ -65,11 +64,11 @@ Computed signals dynamically record dependencies to other signals:
 const toggle = signal(true);
 const a = signal(1);
 const b = signal(2);
-const c = computed(() => toggle() ? a() : b());
+const c = computed(() => toggle.get() ? a.get() : b.get());
 
-console.log(c());
+console.log(c.get());
 toggle.set(false);
-console.log(c());
+console.log(c.get());
 ```
 
 While `toggle` is `true` the computed signal `c` does not depend on `b` because this part of the computation code was not executed. When `toggle` changes to `false` then the dependency on `a` is dropped because it is no longer needed and dependency on `b` is added.
@@ -79,7 +78,7 @@ When a recorded dependency has changed then the compute function is re-evaluated
 Because `ComputedSignal` subscribes to its dependencies the signal must be destroyed when no longer needed. This can be done automatically by using a signal context (see later section) or manually by calling the `destroy()` method:
 
 ```typescript
-const signal = computed(() => someOtherSignal());
+const signal = computed(() => someOtherSignal.get());
 // ...
 signal.destroy();
 ```
@@ -99,9 +98,9 @@ import { arraySignal, computed } from "@kayahr/signal";
 
 const array = arraySignal([ 1, 2, 3 ]);
 const sum = computed(() => array.reduce((sum, value) => sum + value));
-console.log(sum()); // Outputs 6
+console.log(sum.get()); // Outputs 6
 array.push(4);
-console.log(sum()); // Outputs 10
+console.log(sum.get()); // Outputs 10
 ```
 
 
@@ -154,11 +153,11 @@ import { effect, Effect } from "@kayahr/signal";
 const userName = signal("John");
 
 new Effect(() => {
-    console.log("User Name:", userName());
+    console.log("User Name:", userName.get());
 });
 
 effect(() => {
-    console.log("User Name:", userName());
+    console.log("User Name:", userName.get());
 });
 
 userName.set("Jane"); // Both effects now output the new user name
@@ -201,7 +200,7 @@ const user = signal("John");
 const date = signal(new Date());
 
 effect(() => {
-    console.log(`User ${user()} (Date: ${untracked(date)})`);
+    console.log(`User ${user.get()} (Date: ${untracked(date)})`);
 });
 ```
 
@@ -211,9 +210,9 @@ Instead of wrapping a signal you can also wrap a whole function block with the `
 
 ```typescript
 effect() => {
-    console.log("User:", user());
+    console.log("User:", user.get());
     untracked(() => {
-        console.log("Date:", date());
+        console.log("Date:", date.get());
     });
 });
 ```
@@ -279,7 +278,7 @@ import { atomic, signal, effect } from "@kayahr/signal";
 const a = signal(1);
 const b = signal(2);
 
-effect(() => console.log(a() + b());
+effect(() => console.log(a.get() + b.get());
 
 // These updates will call the effect two times
 a.set(3);
@@ -297,16 +296,16 @@ Note that this only affects effects and asynchronous change notifications (signa
 ```ts
 const a = signal(1);
 const b = signal(2);
-const c = computed(() => a() + b());
+const c = computed(() => a.get() + b.get());
 
 // Outputs initial value of c = 3
 c.subscribe(console.log);
 
 atomic(() => {
     a.set(3);
-    console.log(c()); // Outputs new value of c = 5
+    console.log(c.get()); // Outputs new value of c = 5
     b.set(4);
-    console.log(c()); // Outputs new value of c = 7
+    console.log(c.get()); // Outputs new value of c = 7
 });
 // After atomic operation subscriber on c is called once and outputs c = 7
 ```
@@ -319,10 +318,10 @@ Atomic operations can be nested. Change notifications are paused until the top-m
 The notification of signal observers can be optionally throttled with the `throttle` option. This can be useful for effects or actively observed computed signals which do expensive calculations:
 
 ```ts
-const result = computed(() => doHeavyComputations(depA(), depB()), { throttle: 1000 }));
+const result = computed(() => doHeavyComputations(depA.get(), depB.get()), { throttle: 1000 }));
 
 effect(() => {
-    console.log("Latest result", result());
+    console.log("Latest result", result.get());
 });
 ```
 
