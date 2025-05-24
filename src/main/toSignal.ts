@@ -77,7 +77,7 @@ export function toSignal<T>(subscribable: Subscribable<T>, options?: ObserverSig
  * @returns The created signal.
  * @template T - The signal value type.
  */
-export function toSignal<T>(source: SignalSource<T>, options?: ObserverSignalOptions<T> & ({ initialValue: T } | { requireSync: true })): Signal<T>;
+export function toSignal<T>(source: SignalSource<T>, options: ObserverSignalOptions<T> & ({ initialValue: T } | { requireSync: true })): Signal<T>;
 
 /**
  * Creates a {@link Signal} from the given signal source, which can be an observable, a function or already a signal, which is then returned unchanged.
