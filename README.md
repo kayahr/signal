@@ -140,6 +140,28 @@ signal.destroy();
 
 When observable and signal can be garbage-collected together then there is no need to destroy the signal.
 
+## toSignal
+
+The main functionality of the `toSignal` function is to create an `ObserverSignal` wrapping an `Observable`, but it also allows a function as source to create a `ComputedValue` or any kind of `Signal` as source which is simply passed through unchanged. This can come in handy to allow various data sources (including signals) and making sure it is a signal by passing the source through the `toSignal` function.
+
+```typescript
+import { toSignal } from "@kayahr/signal";
+
+// Just passes through the given signal because it already is a signal
+const passedThroughSignal = toSignal(signal);
+
+// Equivalent to `computed(() => 123)`
+const computedSignal = toSignal(() => 123);
+
+// Signal updated by observable, possibly with `undefined` as initial value.
+const unsyncedObserverSignal = toSignal(observable);
+
+// Signal updated by observable which is required to emit an initial value on subscription
+const syncedObserverSignal = toSignal(observable, { requireSync: true });
+
+// Signal initialized with the given value and updated with values from the observable
+const initializedObserverSignal = toSignal(observable, { initialValue: 123 });
+```
 
 ## Effects
 

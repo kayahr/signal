@@ -13,11 +13,12 @@ import { type Destroyable } from "../main/Destroyable.js";
 import { type CleanupFunction, Effect, effect, type EffectFunction } from "../main/Effect.js";
 import { type EqualFunction } from "../main/EqualFunction.js";
 import * as exports from "../main/index.js";
-import { ObserverSignal, type ObserverSignalOptions, toSignal } from "../main/ObserverSignal.js";
+import { ObserverSignal, type ObserverSignalOptions } from "../main/ObserverSignal.js";
 import { ReadonlyArraySignal } from "../main/ReadonlyArraySignal.js";
 import { ReadonlySignal } from "../main/ReadonlySignal.js";
 import { type Signal } from "../main/Signal.js";
 import { setSignalContext, type SignalContext } from "../main/SignalContext.js";
+import { toSignal } from "../main/toSignal.js";
 import { arraySignal, WritableArraySignal } from "../main/WritableArraySignal.js";
 import { signal, WritableSignal } from "../main/WritableSignal.js";
 

@@ -98,23 +98,3 @@ export class ObserverSignal<T> extends BaseSignal<T> implements Destroyable {
         return super.get();
     }
 }
-
-export function toSignal<T>(subscribable: Subscribable<T>, options: ObserverSignalOptions<T> & { initialValue: T }): ObserverSignal<T>;
-export function toSignal<T>(subscribable: Subscribable<T>, options: ObserverSignalOptions<T> & { requireSync: true }): ObserverSignal<T>;
-export function toSignal<T>(subscribable: Subscribable<T>, options?: ObserverSignalOptions<T>): ObserverSignal<T | undefined>;
-
-/**
- * Creates an {@link ObserverSignal} which observes the given observable. Note that by default the signal includes `undefined` as valid value. If you
- * don't want that then either specify an `initialValue` in the signal options or use the `requireSync` option to define that the observable does emit
- * a value synchronously on subscription.
- *
- * To prevent memory leaks you must either manually destroy the signal with the {@link ObserverSignal.destroy} method or use a {@link SignalContext}
- * which automatically destroys observer signals created within the context when the context is destroyed.
- *
- * @param subscribable - The observable to subscribe to.
- * @param options      - Optional signal options.
- * @returns The created observer signal.
- */
-export function toSignal<T>(subscribable: Subscribable<T>, options?: ObserverSignalOptions<T>): ObserverSignal<T | undefined> {
-    return ObserverSignal.from(subscribable, options);
-}
