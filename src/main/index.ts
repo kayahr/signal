@@ -15,6 +15,6 @@ export { ReadonlyArraySignal } from "./ReadonlyArraySignal.js";
 export { ReadonlySignal } from "./ReadonlySignal.js";
 export { type Signal } from "./Signal.js";
 export { setSignalContext, type SignalContext } from "./SignalContext.js";
-export { toSignal } from "./toSignal.js";
+export { type SignalSource, toSignal } from "./toSignal.js";
 export { arraySignal, WritableArraySignal } from "./WritableArraySignal.js";
 export { signal, WritableSignal } from "./WritableSignal.js";

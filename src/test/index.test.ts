@@ -18,7 +18,7 @@ import { ReadonlyArraySignal } from "../main/ReadonlyArraySignal.js";
 import { ReadonlySignal } from "../main/ReadonlySignal.js";
 import { type Signal } from "../main/Signal.js";
 import { setSignalContext, type SignalContext } from "../main/SignalContext.js";
-import { toSignal } from "../main/toSignal.js";
+import { type SignalSource, toSignal } from "../main/toSignal.js";
 import { arraySignal, WritableArraySignal } from "../main/WritableArraySignal.js";
 import { signal, WritableSignal } from "../main/WritableSignal.js";
 
@@ -55,5 +55,6 @@ describe("index", () => {
         ((): EqualFunction => (({} as exports.EqualFunction)))();
         ((): Signal => (({} as exports.Signal)))();
         ((): SignalContext => (({} as exports.SignalContext)))();
+        ((): SignalSource => (({} as exports.SignalSource)))();
     });
 });
