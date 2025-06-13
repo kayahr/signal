@@ -13,7 +13,7 @@ import { ReadonlyArraySignal } from "./ReadonlyArraySignal.js";
 /**
  * A writable signal for arrays. Provides pretty much all common array functions while automatically tracking changes.
  */
-export class WritableArraySignal<T> extends BaseSignal<readonly T[]> implements RelativeIndexable<T> {
+export class WritableArraySignal<T> extends BaseSignal<readonly T[]> {
     /** Used by {@link setAt} to determine if an item has really changed. */
     private readonly equal: EqualFunction<T>;
 

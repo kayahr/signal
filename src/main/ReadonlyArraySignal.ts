@@ -12,7 +12,7 @@ import type { Signal } from "./Signal.js";
 /**
  * Readonly wrapper for an array signal.
  */
-export class ReadonlyArraySignal<T> extends ReadonlySignal<readonly T[]> implements RelativeIndexable<T> {
+export class ReadonlyArraySignal<T> extends ReadonlySignal<readonly T[]> {
     /**
      * Creates new readonly wrapper for the given array signal.
      *
