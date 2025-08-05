@@ -9,7 +9,7 @@
             "ES2022.Array",
             "DOM"
         ],
-        "module": "NodeNext",
+        "module": "node20",
         "newLine": "lf",
         "noEmitOnError": false,
         "noFallthroughCasesInSwitch": true,
@@ -26,6 +26,6 @@
         "skipLibCheck": true,
         "sourceMap": true,
         "strict": true,
-        "target": "ES2022"
+        "target": "es2022"
     }
 }
