@@ -6,22 +6,12 @@
  * under Apache License 2.0.
  */
 
-import { ReadonlySignal } from "./ReadonlySignal.js";
-import type { Signal } from "./Signal.js";
+import { ReadonlySignal } from "./ReadonlySignal.ts";
 
 /**
  * Readonly wrapper for an array signal.
  */
 export class ReadonlyArraySignal<T> extends ReadonlySignal<readonly T[]> {
-    /**
-     * Creates new readonly wrapper for the given array signal.
-     *
-     * @param signal - The signal to wrap.
-     */
-    public constructor(signal: Signal<readonly T[]>) {
-        super(signal);
-    }
-
     /**
      * @returns The array length.
      */
@@ -83,7 +73,7 @@ export class ReadonlyArraySignal<T> extends ReadonlySignal<readonly T[]> {
      * @param fromIndex     - The array index at which to begin the search. If omitted, the search starts at the last index in the array.
      * @returns The index of the last occurrence of the given element, or -1 if not found.
      */
-    public lastIndexOf(searchElement: T, fromIndex: number = -1): number {
+    public lastIndexOf(searchElement: T, fromIndex = -1): number {
         return this.get().lastIndexOf(searchElement, fromIndex);
     }
 

@@ -3,8 +3,8 @@
  * See LICENSE.md for licensing information
  */
 
-import type { Destroyable } from "../../main/Destroyable.js";
-import { setSignalContext } from "../../main/SignalContext.js";
+import type { Destroyable } from "../../main/Destroyable.ts";
+import { setSignalContext } from "../../main/SignalContext.ts";
 
 /**
  * A destroyable context hierarchy.

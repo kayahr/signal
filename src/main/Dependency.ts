@@ -5,7 +5,7 @@
 
 import type { Unsubscribable } from "@kayahr/observable";
 
-import type { Signal } from "./Signal.js";
+import type { Signal } from "./Signal.ts";
 
 /**
  * A dependency to a signal.

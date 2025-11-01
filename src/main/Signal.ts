@@ -13,11 +13,11 @@ export abstract class Signal<T = unknown> implements InteropObservable<T> {
      * Subscribes the given observer to this object.
      *
      * @param observer - The observer to subscribe.
-     * @return Object which can be used to unsubscribe the observer.
+     * @returns Object which can be used to unsubscribe the observer.
      */
     public abstract subscribe(observer: Observer<T> | ((next: T) => void)): Unsubscribable;
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public [Symbol.observable](): InteropSubscribable<T> {
         return this;
     }

@@ -3,61 +3,67 @@
  * See LICENSE.md for licensing information
  */
 
-import "@kayahr/vitest-matchers";
 
-import { describe, expect, it, vi } from "vitest";
-
-import { atomic } from "../main/atomic.js";
-import { computed } from "../main/ComputedSignal.js";
-import { effect } from "../main/Effect.js";
-import { signal } from "../main/WritableSignal.js";
+import { describe, it } from "node:test";
+import { assertSame } from "@kayahr/assert";
+import { atomic } from "../main/atomic.ts";
+import { computed } from "../main/ComputedSignal.ts";
+import { effect } from "../main/Effect.ts";
+import { signal } from "../main/WritableSignal.ts";
 
 describe("atomic", () => {
-    it("pauses signal notifications until atomic operation is complete", () => {
+    it("pauses signal notifications until atomic operation is complete", (context) => {
         const a = signal(1);
         const b = signal(2);
         const c = computed(() => a.get() + b.get());
-        const fn = vi.fn();
+        const fn = context.mock.fn();
         c.subscribe(fn);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(3);
-        fn.mockClear();
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 3);
+        fn.mock.resetCalls();
         atomic(() => {
             a.set(4);
             b.set(5);
-            expect(fn).not.toHaveBeenCalled();
+            assertSame(fn.mock.callCount(), 0);
         });
-        expect(fn).toHaveBeenCalledExactlyOnceWith(9);
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 9);
     });
-    it("pauses signal notifications of multiple signals until atomic operation is complete", () => {
+    it("pauses signal notifications of multiple signals until atomic operation is complete", (context) => {
         const a = signal(2);
         const b = signal(3);
         const c = computed(() => a.get() + b.get());
         const d = computed(() => a.get() * b.get());
-        const cChanged = vi.fn();
-        const dChanged = vi.fn();
+        const cChanged = context.mock.fn();
+        const dChanged = context.mock.fn();
         c.subscribe(cChanged);
         d.subscribe(dChanged);
-        expect(cChanged).toHaveBeenCalledExactlyOnceWith(5);
-        expect(dChanged).toHaveBeenCalledExactlyOnceWith(6);
-        cChanged.mockClear();
-        dChanged.mockClear();
+        assertSame(cChanged.mock.callCount(), 1);
+        assertSame(cChanged.mock.calls[0].arguments[0], 5);
+        assertSame(dChanged.mock.callCount(), 1);
+        assertSame(dChanged.mock.calls[0].arguments[0], 6);
+        cChanged.mock.resetCalls();
+        dChanged.mock.resetCalls();
         atomic(() => {
             a.set(4);
             b.set(5);
-            expect(cChanged).not.toHaveBeenCalled();
-            expect(dChanged).not.toHaveBeenCalled();
+            assertSame(cChanged.mock.callCount(), 0);
+            assertSame(dChanged.mock.callCount(), 0);
         });
-        expect(cChanged).toHaveBeenCalledExactlyOnceWith(9);
-        expect(dChanged).toHaveBeenCalledExactlyOnceWith(20);
+        assertSame(cChanged.mock.callCount(), 1);
+        assertSame(cChanged.mock.calls[0].arguments[0], 9);
+        assertSame(dChanged.mock.callCount(), 1);
+        assertSame(dChanged.mock.calls[0].arguments[0], 20);
     });
-    it("can be nested", () => {
+    it("can be nested", (context) => {
         const a = signal(1);
         const b = signal(2);
         const c = computed(() => a.get() + b.get());
-        const fn = vi.fn();
+        const fn = context.mock.fn();
         c.subscribe(fn);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(3);
-        fn.mockClear();
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 3);
+        fn.mock.resetCalls();
         atomic(() => {
             a.set(4);
             b.set(5);
@@ -67,25 +73,27 @@ describe("atomic", () => {
                     a.set(7);
                     atomic(() => {
                         b.set(8);
-                        expect(fn).not.toHaveBeenCalled();
+                        assertSame(fn.mock.callCount(), 0);
                     });
-                    expect(fn).not.toHaveBeenCalled();
+                    assertSame(fn.mock.callCount(), 0);
                 });
                 a.set(6);
-                expect(fn).not.toHaveBeenCalled();
+                assertSame(fn.mock.callCount(), 0);
             });
-            expect(fn).not.toHaveBeenCalled();
+            assertSame(fn.mock.callCount(), 0);
         });
-        expect(fn).toHaveBeenCalledExactlyOnceWith(14);
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 14);
     });
-    it("returns the function result", () => {
+    it("returns the function result", (context) => {
         const a = signal(1);
         const b = signal(2);
         const c = computed(() => a.get() + b.get());
-        const fn = vi.fn();
+        const fn = context.mock.fn();
         c.subscribe(fn);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(3);
-        fn.mockClear();
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 3);
+        fn.mock.resetCalls();
         const test = atomic(() => {
             a.set(4);
             b.set(5);
@@ -94,7 +102,7 @@ describe("atomic", () => {
                 return 100;
             });
         });
-        expect(test).toBe(123);
+        assertSame(test, 123);
     });
     it("pauses effects", () => {
         const a = signal(1);
@@ -103,28 +111,28 @@ describe("atomic", () => {
         effect(() => {
             c = a.get() + b.get();
         });
-        expect(c).toBe(3);
+        assertSame(c, 3);
         atomic(() => {
             a.set(4);
-            expect(c).toBe(3);
+            assertSame(c, 3);
             atomic(() => {
                 b.set(6);
-                expect(c).toBe(3);
+                assertSame(c, 3);
             });
-            expect(c).toBe(3);
+            assertSame(c, 3);
         });
-        expect(c).toBe(10);
+        assertSame(c, 10);
     });
     it("does not effect synchronous getter calls", () => {
         const a = signal(1);
         const b = signal(2);
         const c = computed(() => a.get() + b.get());
         atomic(() => {
-            expect(c.get()).toBe(3);
+            assertSame(c.get(), 3);
             a.set(3);
-            expect(c.get()).toBe(5);
+            assertSame(c.get(), 5);
             b.set(10);
-            expect(c.get()).toBe(13);
+            assertSame(c.get(), 13);
         });
     });
 });

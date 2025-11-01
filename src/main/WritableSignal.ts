@@ -3,8 +3,8 @@
  * See LICENSE.md for licensing information
  */
 
-import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
-import { ReadonlySignal } from "./ReadonlySignal.js";
+import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.ts";
+import { ReadonlySignal } from "./ReadonlySignal.ts";
 
 /**
  * The most basic form of a signal which is just a container for a value providing read and write access to the value and allowing to monitor the value for
@@ -44,7 +44,7 @@ export class WritableSignal<T = unknown> extends BaseSignal<T> {
  *
  * @param initialValue - The initial value.
  * @param options      - Optional signal options.
- * @return The created writable signal.
+ * @returns The created writable signal.
  */
 export function signal<T>(initialValue: T, options?: BaseSignalOptions<T>): WritableSignal<T> {
     return new WritableSignal(initialValue, options);

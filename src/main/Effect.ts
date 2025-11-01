@@ -5,10 +5,10 @@
 
 import type { Unsubscribable } from "@kayahr/observable";
 
-import { ComputedSignal } from "./ComputedSignal.js";
-import { untracked } from "./Dependencies.js";
-import type { Destroyable } from "./Destroyable.js";
-import { registerDestroyable } from "./SignalContext.js";
+import { ComputedSignal } from "./ComputedSignal.ts";
+import { untracked } from "./Dependencies.ts";
+import type { Destroyable } from "./Destroyable.ts";
+import { registerDestroyable } from "./SignalContext.ts";
 
 /** Cleanup function which can optionally be returned by effect function. It is called before effect function is called again and on effect destruction. */
 export type CleanupFunction = () => void;

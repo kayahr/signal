@@ -4,10 +4,11 @@
  */
 
 import { Observable } from "@kayahr/observable";
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
 
-import { ObserverSignal } from "../main/ObserverSignal.js";
-import { Context } from "./support/Context.js";
+import { ObserverSignal } from "../main/ObserverSignal.ts";
+import { Context } from "./support/Context.ts";
+import { assertNotThrow, assertSame, assertThrow, assertThrowWithMessage, assertUndefined } from "@kayahr/assert";
 
 describe("ObserverSignal", () => {
     it("is destroyed via signal context if present", () => {
@@ -18,12 +19,12 @@ describe("ObserverSignal", () => {
         });
         const context = new Context();
         const signal = context.runInContext(() => ObserverSignal.from(observable, { initialValue: "init" }));
-        expect(signal.get()).toBe("init");
+        assertSame(signal.get(), "init");
         next?.("test");
-        expect(signal.get()).toBe("test");
+        assertSame(signal.get(), "test");
         context.destroy();
-        expect(next).toBe(null);
-        expect(() => signal.get()).toThrowError(new Error("Observer signal has been destroyed"));
+        assertSame(next, null);
+        assertThrowWithMessage(() => signal.get(), Error, "Observer signal has been destroyed");
     });
 
     describe("from", () => {
@@ -31,28 +32,28 @@ describe("ObserverSignal", () => {
             const observable = new Observable<string>(observer => observer.next("test value"));
             const signal = ObserverSignal.from(observable, { requireSync: true });
             ((v: string) => v)(signal.get()); // Compile-time check to ensure signal value type is string without undefined
-            expect(signal.get()).toBe("test value");
+            assertSame(signal.get(), "test value");
         });
         it("creates an observer signal with an initial value", () => {
             let next: (v: string) => void = () => {};
             const observable = new Observable<string>(observer => { next = v => observer.next(v); });
             const signal = ObserverSignal.from(observable, { initialValue: "init" });
             ((v: string) => v)(signal.get()); // Compile-time check to ensure signal value type is string without undefined
-            expect(signal.get()).toBe("init");
+            assertSame(signal.get(), "init");
             next("test");
-            expect(signal.get()).toBe("test");
+            assertSame(signal.get(), "test");
         });
         it("creates an observer signal for a non-synchronous observable without initial value (adding undefined to value type)", () => {
             const observable = new Observable<string>(() => {});
             const signal = ObserverSignal.from(observable);
-            expect(signal.get()).toBe(undefined);
+            assertSame(signal.get(), undefined);
             let value = signal.get();
             value = undefined; // Compile-time check to ensure signal value type is string or undefined
-            expect(value).toBeUndefined();
+            assertUndefined(value);
         });
         it("throws error when observable does not emit synchronously but requireSync is set to true", () => {
             const observable = new Observable<string>(() => {});
-            expect(() => ObserverSignal.from(observable, { requireSync: true })).toThrowError(new Error("Observable did dot emit a value synchronously"));
+            assertThrowWithMessage(() => ObserverSignal.from(observable, { requireSync: true }), Error, "Observable did dot emit a value synchronously");
         });
     });
 
@@ -64,12 +65,12 @@ describe("ObserverSignal", () => {
                 return () => { next = null; };
             });
             const signal = ObserverSignal.from(observable, { initialValue: "init" });
-            expect(signal.get()).toBe("init");
+            assertSame(signal.get(), "init");
             next?.("test");
-            expect(signal.get()).toBe("test");
+            assertSame(signal.get(), "test");
             signal.destroy();
-            expect(next).toBe(null);
-            expect(() => signal.get()).toThrowError(new Error("Observer signal has been destroyed"));
+            assertSame(next, null);
+            assertThrowWithMessage(() => signal.get(), Error, "Observer signal has been destroyed");
         });
     });
 
@@ -81,12 +82,12 @@ describe("ObserverSignal", () => {
                 return () => { throwError = null; };
             });
             const signal = ObserverSignal.from(observable, { initialValue: "init" });
-            expect(signal.get()).toBe("init");
+            assertSame(signal.get(), "init");
             const error = new Error("Test Error");
             throwError?.(error);
-            expect(() => signal.get()).toThrowError(error);
-            expect(() => signal.get()).toThrowError(error);
-            expect(throwError).toBe(null);
+            assertThrow(() => signal.get(), error);
+            assertThrow(() => signal.get(), error);
+            assertSame(throwError, null);
         });
         it("returns last emitted value after observable completes", () => {
             let complete = null as (() => void) | null;
@@ -96,24 +97,24 @@ describe("ObserverSignal", () => {
                 return () => { complete = null; };
             });
             const signal = ObserverSignal.from(observable, { requireSync: true });
-            expect(signal.get()).toBe(53);
+            assertSame(signal.get(), 53);
             complete?.();
-            expect(signal.get()).toBe(53);
-            expect(complete).toBe(null);
+            assertSame(signal.get(), 53);
+            assertSame(complete, null);
         });
     });
     describe("isValid", () => {
         it("returns true", () => {
             const observable = new Observable<number>(observer => observer.next(1));
             const signal = ObserverSignal.from(observable);
-            expect(signal.isValid()).toBe(true);
+            assertSame(signal.isValid(), true);
         });
     });
     describe("validate", () => {
         it("does nothing", () => {
             const observable = new Observable<number>(observer => observer.next(1));
             const signal = ObserverSignal.from(observable);
-            expect(() => signal.validate()).not.toThrow();
+            assertNotThrow(() => signal.validate());
         });
     });
 });

@@ -11,7 +11,8 @@
     "treatWarningsAsErrors": true,
     "validation": true,
     "plugin": [
-        "typedoc-github-theme"
+        "@kayahr/typedoc/github-theme",
+        "@kayahr/typedoc/mdn-links"
     ],
     "gitRevision": "main"
 }

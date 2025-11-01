@@ -4,82 +4,86 @@
  */
 
 import "symbol-observable";
-import "@kayahr/vitest-matchers";
 
 import { from } from "rxjs";
-import { describe, expect, it, vi } from "vitest";
+import { describe, it } from "node:test";
 
-import { ReadonlySignal } from "../main/ReadonlySignal.js";
-import { WritableSignal } from "../main/WritableSignal.js";
+import { ReadonlySignal } from "../main/ReadonlySignal.ts";
+import { WritableSignal } from "../main/WritableSignal.ts";
+import { assertSame } from "@kayahr/assert";
 
 describe("ReadonlySignal", () => {
     it("can be called as a getter function", () => {
         const value = new ReadonlySignal(new WritableSignal(20));
-        expect(value.get()).toBe(20);
+        assertSame(value.get(), 20);
     });
-    it("can be observed for changes on the wrapped value", () => {
+    it("can be observed for changes on the wrapped value", (context) => {
         const a = new WritableSignal(10);
         const b = new ReadonlySignal(a);
-        const fn = vi.fn();
+        const fn = context.mock.fn();
         b.subscribe(fn);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(10);
-        fn.mockClear();
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 10);
+        fn.mock.resetCalls();
         a.set(20);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(20);
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 20);
     });
     describe("getVersion", () => {
         it("forwards to wrapped value", () => {
             const a = new WritableSignal(1);
             const b = new ReadonlySignal(a);
-            expect(b.getVersion()).toBe(0);
+            assertSame(b.getVersion(), 0);
             a.set(2);
-            expect(b.getVersion()).toBe(1);
+            assertSame(b.getVersion(), 1);
         });
     });
     describe("isWatched", () => {
         it("forwards to wrapped value", () => {
             const a = new WritableSignal(1);
             const b = new ReadonlySignal(a);
-            expect(b.isWatched()).toBe(false);
+            assertSame(b.isWatched(), false);
             a.subscribe(() => {});
-            expect(b.isWatched()).toBe(true);
+            assertSame(b.isWatched(), true);
         });
     });
     describe("get", () => {
         it("forwards to wrapped value", () => {
             const a = new WritableSignal(1);
             const b = new ReadonlySignal(a);
-            expect(b.get()).toBe(1);
+            assertSame(b.get(), 1);
             a.set(2);
-            expect(b.get()).toBe(2);
+            assertSame(b.get(), 2);
         });
     });
     describe("isValid", () => {
-        it("forwards to wrapped value", () => {
+        it("forwards to wrapped value", (context) => {
             const a = new WritableSignal(1);
             const b = new ReadonlySignal(a);
-            const spy = vi.spyOn(a, "isValid");
-            expect(b.isValid()).toBe(true);
-            expect(spy).toHaveBeenCalledOnce();
+            const spy = context.mock.method(a, "isValid");
+            assertSame(b.isValid(), true);
+            assertSame(spy.mock.callCount(), 1);
         });
     });
     describe("validate", () => {
-        it("forwards to wrapped value", () => {
+        it("forwards to wrapped value", (context) => {
             const a = new WritableSignal(1);
             const b = new ReadonlySignal(a);
-            const spy = vi.spyOn(a, "validate");
+            const spy = context.mock.method(a, "validate");
             b.validate();
-            expect(spy).toHaveBeenCalledOnce();
+            assertSame(spy.mock.callCount(), 1);
         });
     });
-    it("can be observed via RxJS for changes on the wrapped value", () => {
+    it("can be observed via RxJS for changes on the wrapped value", (context) => {
         const base = new WritableSignal(10);
         const signal = base.asReadonly();
-        const fn = vi.fn();
+        const fn = context.mock.fn();
         from(signal).subscribe(fn);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(10);
-        fn.mockClear();
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 10);
+        fn.mock.resetCalls();
         base.set(20);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(20);
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 20);
     });
 });

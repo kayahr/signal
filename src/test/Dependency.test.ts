@@ -3,12 +3,12 @@
  * See LICENSE.md for licensing information
  */
 
-import "@kayahr/vitest-matchers";
 
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
 
-import { Dependency } from "../main/Dependency.js";
-import { signal } from "../main/WritableSignal.js";
+import { Dependency } from "../main/Dependency.ts";
+import { signal } from "../main/WritableSignal.ts";
+import { assertThrowWithMessage } from "@kayahr/assert";
 
 describe("Dependency", () => {
     describe("watch", () => {
@@ -16,14 +16,14 @@ describe("Dependency", () => {
             const sig = signal(1);
             const dep = new Dependency(sig);
             dep.watch(() => {});
-            expect(() => { dep.watch(() => {}); }).toThrowWithMessage(Error, "Dependency is already watched");
+            assertThrowWithMessage(() => { dep.watch(() => {}); }, Error, "Dependency is already watched");
         });
     });
     describe("unwatch", () => {
         it("throws error when dependency is not watched", () => {
             const sig = signal(1);
             const dep = new Dependency(sig);
-            expect(() => { dep.unwatch(); }).toThrowWithMessage(Error, "Dependency is not watched");
+            assertThrowWithMessage(() => { dep.unwatch(); }, Error, "Dependency is not watched");
         });
     });
 });

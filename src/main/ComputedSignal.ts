@@ -3,10 +3,10 @@
  * See LICENSE.md for licensing information
  */
 
-import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
-import { Dependencies } from "./Dependencies.js";
-import type { Destroyable } from "./Destroyable.js";
-import { registerDestroyable } from "./SignalContext.js";
+import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.ts";
+import { Dependencies } from "./Dependencies.ts";
+import type { Destroyable } from "./Destroyable.ts";
+import { registerDestroyable } from "./SignalContext.ts";
 
 /** Type of a compute function. */
 export type ComputeFunction<T = unknown> = () => T;
@@ -34,12 +34,12 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
         registerDestroyable(this);
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     protected override watch(): void {
         this.dependencies.watch();
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     protected override unwatch(): void {
         this.dependencies.unwatch();
     }
@@ -50,7 +50,7 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
         this.set(value);
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public override get(): T {
         if (this.destroyed) {
             throw new Error("Computed signal has been destroyed");
@@ -65,18 +65,18 @@ export class ComputedSignal<T = unknown> extends BaseSignal<T> implements Destro
         return super.get();
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public destroy(): void {
         this.destroyed = true;
         this.dependencies.destroy();
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public override isValid(): boolean {
         return this.dependencies.isValid();
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public override validate(): void {
         if (this.dependencies.validate()) {
             this.update();

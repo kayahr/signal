@@ -5,12 +5,12 @@
 
 import "symbol-observable";
 
-import { Observable, type Observer, SharedObservable, type Subscription, type SubscriptionObserver } from "@kayahr/observable";
+import { type Observable, type Observer, SharedObservable, type Subscription, type SubscriptionObserver } from "@kayahr/observable";
 
-import { getAtom } from "./atomic.js";
-import { track } from "./Dependencies.js";
-import type { EqualFunction } from "./EqualFunction.js";
-import { Signal } from "./Signal.js";
+import { getAtom } from "./atomic.ts";
+import { track } from "./Dependencies.ts";
+import type { EqualFunction } from "./EqualFunction.ts";
+import { Signal } from "./Signal.ts";
 
 /**
  * Base signal options.
@@ -64,7 +64,7 @@ export abstract class BaseSignal<T = unknown> extends Signal<T> {
         this.throttle = throttle;
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public get(): T {
         track(this);
         return this.value;
@@ -122,7 +122,7 @@ export abstract class BaseSignal<T = unknown> extends Signal<T> {
         return this;
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public subscribe(observer: Observer<T> | ((next: T) => void)): Subscription {
         observer = typeof observer === "function" ? { next: observer } : observer;
         observer?.next?.(this.get());
@@ -137,7 +137,7 @@ export abstract class BaseSignal<T = unknown> extends Signal<T> {
         return this.observable.subscribe(observer);
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public isWatched(): boolean {
         return this.observer != null;
     }
@@ -158,11 +158,11 @@ export abstract class BaseSignal<T = unknown> extends Signal<T> {
         return this.version;
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public isValid(): boolean {
         return true;
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public validate(): void {}
 }

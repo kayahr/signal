@@ -3,7 +3,7 @@
  * See LICENSE.md for licensing information
  */
 
-import type { Destroyable } from "./Destroyable.js";
+import type { Destroyable } from "./Destroyable.ts";
 
 /**
  * A signal context which can be set by frameworks to automatically destroy registered destroyable signals (or other destroyable objects) when the context is

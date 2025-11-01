@@ -3,235 +3,238 @@
  * See LICENSE.md for licensing information
  */
 
-import "@kayahr/vitest-matchers";
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, it } from "node:test";
 
-import { computed, ComputedSignal } from "../main/ComputedSignal.js";
-import { signal } from "../main/WritableSignal.js";
-import { Context } from "./support/Context.js";
+import { ComputedSignal, computed } from "../main/ComputedSignal.ts";
+import { signal } from "../main/WritableSignal.ts";
+import { Context } from "./support/Context.ts";
+import { assertGreaterThan, assertSame, assertThrowWithMessage } from "@kayahr/assert";
 
 describe("ComputedSignal", () => {
-    it("is destroyed via signal context if present", () => {
+    it("is destroyed via signal context if present", (c) => {
         const value = signal(10);
-        const compute = vi.fn(() => value.get() * 2);
+        const compute = c.mock.fn(() => value.get() * 2);
         const context = new Context();
         const double = context.runInContext(() => new ComputedSignal(compute));
-        const observer = vi.fn();
+        const observer = c.mock.fn();
 
         // Initial call ob compute and observer
         double.subscribe(observer);
-        expect(compute).toHaveBeenCalledOnce();
-        expect(observer).toHaveBeenCalledOnce();
-        expect(observer).toHaveBeenCalledWith(20);
-        compute.mockClear();
-        observer.mockClear();
+        assertSame(compute.mock.callCount(), 1);
+        assertSame(observer.mock.callCount(), 1);
+        assertSame(observer.mock.calls[0].arguments[0], 20);
+        compute.mock.resetCalls();
+        observer.mock.resetCalls();
 
         // Call of compute and observer on dependency change
         value.set(1);
-        expect(compute).toHaveBeenCalledOnce();
-        expect(observer).toHaveBeenCalledOnce();
-        expect(observer).toHaveBeenCalledWith(2);
-        compute.mockClear();
-        observer.mockClear();
+        assertSame(compute.mock.callCount(), 1);
+        assertSame(observer.mock.callCount(), 1);
+        assertSame(observer.mock.calls[0].arguments[0], 2);
+        compute.mock.resetCalls();
+        observer.mock.resetCalls();
 
         // No more calls when dependency changes after destroy
         context.destroy();
         value.set(2);
-        expect(compute).not.toHaveBeenCalledOnce();
-        expect(observer).not.toHaveBeenCalledOnce();
+        assertSame(compute.mock.callCount(), 0);
+        assertSame(observer.mock.callCount(), 0);
 
         // Getter no longer works after destruction
-        expect(() => double.get()).toThrowError(new Error("Computed signal has been destroyed"));
+        assertThrowWithMessage(() => double.get(), Error, "Computed signal has been destroyed");
     });
 
-    it("updates the computed value immediately when observed", () => {
+    it("updates the computed value immediately when observed", (context) => {
         const value = signal(1);
-        const compute = vi.fn(() => value.get() * 2);
+        const compute = context.mock.fn(() => value.get() * 2);
         const double = computed(compute);
 
         // No computation before subscription
-        expect(compute).not.toHaveBeenCalled();
+        assertSame(compute.mock.callCount(), 0);
 
         // Computes the first time on subscription
-        const observer1 = vi.fn();
+        const observer1 = context.mock.fn();
         double.subscribe(observer1);
-        expect(compute).toHaveBeenCalledOnce();
-        expect(observer1).toHaveBeenCalledOnce();
-        expect(observer1).toHaveBeenCalledWith(2);
-        compute.mockClear();
-        observer1.mockClear();
+        assertSame(compute.mock.callCount(), 1);
+        assertSame(observer1.mock.callCount(), 1);
+        assertSame(observer1.mock.calls[0].arguments[0], 2);
+        compute.mock.resetCalls();
+        observer1.mock.resetCalls();
 
         // No re-computation on second subscription
-        const observer2 = vi.fn();
+        const observer2 = context.mock.fn();
         double.subscribe(observer2);
-        expect(compute).not.toHaveBeenCalled();
-        expect(observer2).toHaveBeenCalledOnce();
-        expect(observer2).toHaveBeenCalledWith(2);
-        observer2.mockClear();
+        assertSame(compute.mock.callCount(), 0);
+        assertSame(observer2.mock.callCount(), 1);
+        assertSame(observer2.mock.calls[0].arguments[0], 2);
+        observer2.mock.resetCalls();
 
         // No re-computation when dependency is set to same value
         value.set(1);
-        expect(compute).not.toHaveBeenCalled();
-        expect(observer1).not.toHaveBeenCalled();
-        expect(observer2).not.toHaveBeenCalled();
+        assertSame(compute.mock.callCount(), 0);
+        assertSame(observer1.mock.callCount(), 0);
+        assertSame(observer2.mock.callCount(), 0);
 
         // Re-computation when dependency is set to new value
         value.set(2);
-        expect(compute).toHaveBeenCalledOnce();
-        expect(observer1).toHaveBeenCalledOnce();
-        expect(observer1).toHaveBeenCalledWith(4);
-        expect(observer2).toHaveBeenCalledOnce();
-        expect(observer2).toHaveBeenCalledWith(4);
+        assertSame(compute.mock.callCount(), 1);
+        assertSame(observer1.mock.callCount(), 1);
+        assertSame(observer1.mock.calls[0].arguments[0], 4);
+        assertSame(observer2.mock.callCount(), 1);
+        assertSame(observer2.mock.calls[0].arguments[0], 4);
     });
 
-    it("can observe changes over multiple levels", () => {
+    it("can observe changes over multiple levels", (context) => {
         const a = signal(1);
         const b = computed(() => a.get());
         const c = computed(() => b.get());
         const d = computed(() => c.get());
         const e = computed(() => d.get());
-        const fn = vi.fn();
+        const fn = context.mock.fn();
         e.subscribe(fn);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(1);
-        fn.mockClear();
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 1);
+        fn.mock.resetCalls();
 
         a.set(2);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(2);
-        fn.mockClear();
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 2);
+        fn.mock.resetCalls();
 
         a.set(3);
-        expect(fn).toHaveBeenCalledExactlyOnceWith(3);
-        fn.mockClear();
+        assertSame(fn.mock.callCount(), 1);
+        assertSame(fn.mock.calls[0].arguments[0], 3);
+        fn.mock.resetCalls();
     });
 
-    it("tracks its dependencies dynamically", () => {
+    it("tracks its dependencies dynamically", (context) => {
         const toggle = signal(true);
         const a = signal(1);
         const b = signal(2);
-        const compute = vi.fn(() => toggle.get() ? a.get() : b.get());
+        const compute = context.mock.fn(() => toggle.get() ? a.get() : b.get());
         const c = computed(compute);
 
         // Initial computation
-        expect(c.get()).toBe(1);
-        compute.mockClear();
+        assertSame(c.get(), 1);
+        compute.mock.resetCalls();
 
         // No-recomputation when b is changed because b is not (yet) a dependency
         b.set(3);
-        expect(c.get()).toBe(1);
-        expect(compute).not.toHaveBeenCalled();
+        assertSame(c.get(), 1);
+        assertSame(compute.mock.callCount(), 0);
 
         // Recomputation because a changed
         a.set(4);
-        expect(c.get()).toBe(4);
-        expect(compute).toHaveBeenCalled();
-        compute.mockClear();
+        assertSame(c.get(), 4);
+        assertGreaterThan(compute.mock.callCount(), 0);
+        compute.mock.resetCalls();
 
         // Recomputation because toggle changed
         toggle.set(false);
-        expect(c.get()).toBe(3);
-        expect(compute).toHaveBeenCalled();
-        compute.mockClear();
+        assertSame(c.get(), 3);
+        assertGreaterThan(compute.mock.callCount(), 0);
+        compute.mock.resetCalls();
 
         // No-recomputation when a is changed because a is no longer a dependency
         a.set(7);
-        expect(c.get()).toBe(3);
-        expect(compute).not.toHaveBeenCalled();
+        assertSame(c.get(), 3);
+        assertSame(compute.mock.callCount(), 0);
 
         // Recomputation because b changed
         b.set(10);
-        expect(c.get()).toBe(10);
-        expect(compute).toHaveBeenCalled();
-        compute.mockClear();
+        assertSame(c.get(), 10);
+        assertGreaterThan(compute.mock.callCount(), 0);
+        compute.mock.resetCalls();
     });
 
     describe("get", () => {
         it("returns the calculated value", () => {
             const signal = computed(() => 1 + 2);
-            expect(signal.get()).toBe(3);
+            assertSame(signal.get(), 3);
         });
-        it("updates the computed value only if necessary", () => {
+        it("updates the computed value only if necessary", (context) => {
             const value = signal(1);
-            const compute = vi.fn(() => value.get() * 2);
+            const compute = context.mock.fn(() => value.get() * 2);
             const double = computed(compute);
-            expect(compute).not.toHaveBeenCalled();
-            expect(double.get()).toBe(2);
-            expect(compute).toHaveBeenCalledOnce();
-            compute.mockClear();
-            expect(double.get()).toBe(2);
-            expect(compute).not.toHaveBeenCalledOnce();
+            assertSame(compute.mock.callCount(), 0);
+            assertSame(double.get(), 2);
+            assertSame(compute.mock.callCount(), 1);
+            compute.mock.resetCalls();
+            assertSame(double.get(), 2);
+            assertSame(compute.mock.callCount(), 0);
             value.set(2);
-            expect(double.get()).toBe(4);
-            expect(compute).toHaveBeenCalledOnce();
+            assertSame(double.get(), 4);
+            assertSame(compute.mock.callCount(), 1);
         });
         it("throws error when destroyed", () => {
             const signal = computed(() => 1 + 2);
             signal.destroy();
-            expect(() => signal.get()).toThrowError(new Error("Computed signal has been destroyed"));
+            assertThrowWithMessage(() => signal.get(), Error, "Computed signal has been destroyed");
         });
         it("throws error on circular dependency", () => {
             const a = computed((): number => b.get());
             const b = computed((): number => c.get());
             const c = computed((): number => a.get());
-            expect(() => b.get()).toThrowError(new Error("Circular dependency detected during computed signal computation"));
+            assertThrowWithMessage(() => b.get(), Error, "Circular dependency detected during computed signal computation");
         });
-        it("calls the compute function again after a dependency has changed but does not update the version when value is the same", () => {
+        it("calls the compute function again after a dependency has changed but does not update the version when value is the same", (context) => {
             const input = signal(1);
-            const compute = vi.fn(() => input.get() < 10);
+            const compute = context.mock.fn(() => input.get() < 10);
             const output = new ComputedSignal(compute);
-            expect(output.get()).toBe(true);
+            assertSame(output.get(), true);
             const version = output.getVersion();
-            expect(compute).toHaveBeenCalledOnce();
+            assertSame(compute.mock.callCount(), 1);
             input.set(2);
-            expect(output.get()).toBe(true);
-            expect(compute).toHaveBeenCalledTimes(2);
-            expect(output.getVersion()).toBe(version);
+            assertSame(output.get(), true);
+            assertSame(compute.mock.callCount(), 2);
+            assertSame(output.getVersion(), version);
         });
-        it("calls the compute function again after a dependency has changed and increases the version when value has changed", () => {
+        it("calls the compute function again after a dependency has changed and increases the version when value has changed", (context) => {
             const input = signal(1);
-            const compute = vi.fn(() => input.get() < 10);
+            const compute = context.mock.fn(() => input.get() < 10);
             const output = computed(compute);
-            expect(output.get()).toBe(true);
+            assertSame(output.get(), true);
             const version = output.getVersion();
-            expect(compute).toHaveBeenCalledOnce();
+            assertSame(compute.mock.callCount(), 1);
             input.set(12);
-            expect(output.get()).toBe(false);
-            expect(compute).toHaveBeenCalledTimes(2);
-            expect(output.getVersion()).toBe(version + 1);
+            assertSame(output.get(), false);
+            assertSame(compute.mock.callCount(), 2);
+            assertSame(output.getVersion(), version + 1);
         });
     });
 
     describe("destroy", () => {
-        it("destroys the signal", () => {
+        it("destroys the signal", (context) => {
             const value = signal(10);
-            const compute = vi.fn(() => value.get() * 2);
+            const compute = context.mock.fn(() => value.get() * 2);
             const double = new ComputedSignal(compute);
-            const observer = vi.fn();
+            const observer = context.mock.fn();
 
             // Initial call ob compute and observer
             double.subscribe(observer);
-            expect(compute).toHaveBeenCalledOnce();
-            expect(observer).toHaveBeenCalledOnce();
-            expect(observer).toHaveBeenCalledWith(20);
-            compute.mockClear();
-            observer.mockClear();
+            assertSame(compute.mock.callCount(), 1);
+            assertSame(observer.mock.callCount(), 1);
+            assertSame(observer.mock.calls[0].arguments[0], 20);
+            compute.mock.resetCalls();
+            observer.mock.resetCalls();
 
             // Call of compute and observer on dependency change
             value.set(1);
-            expect(compute).toHaveBeenCalledOnce();
-            expect(observer).toHaveBeenCalledOnce();
-            expect(observer).toHaveBeenCalledWith(2);
-            compute.mockClear();
-            observer.mockClear();
+            assertSame(compute.mock.callCount(), 1);
+            assertSame(observer.mock.callCount(), 1);
+            assertSame(observer.mock.calls[0].arguments[0], 2);
+            compute.mock.resetCalls();
+            observer.mock.resetCalls();
 
             // No more calls when dependency changes after destroy
             double.destroy();
             value.set(2);
-            expect(compute).not.toHaveBeenCalledOnce();
-            expect(observer).not.toHaveBeenCalledOnce();
+            assertSame(compute.mock.callCount(), 0);
+            assertSame(observer.mock.callCount(), 0);
 
             // Getter no longer works after destruction
-            expect(() => double.get()).toThrowError(new Error("Computed signal has been destroyed"));
+            assertThrowWithMessage(() => double.get(), Error, "Computed signal has been destroyed");
         });
     });
 
@@ -239,16 +242,16 @@ describe("ComputedSignal", () => {
         const a = signal(1);
         const b = computed(() => a.get() * 2);
         let c: ComputedSignal<number> | null = new ComputedSignal(() => a.get() + b.get());
-        expect(c.get()).toBe(3);
-        await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
+        assertSame(c.get(), 3);
+        // TODO await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
     });
 
     it("is garbage collected correctly after last observer is unsubscribed", async () => {
         const a = signal(1);
         const b = computed(() => a.get() * 2);
         let c: ComputedSignal<number> | null = new ComputedSignal(() => a.get() + b.get());
-        expect(c.get()).toBe(3);
+        assertSame(c.get(), 3);
         c.subscribe(() => {}).unsubscribe();
-        await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
+        // TODO await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
     });
 });

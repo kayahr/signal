@@ -6,9 +6,9 @@
  * under Apache License 2.0.
  */
 
-import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
-import type { EqualFunction } from "./EqualFunction.js";
-import { ReadonlyArraySignal } from "./ReadonlyArraySignal.js";
+import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.ts";
+import type { EqualFunction } from "./EqualFunction.ts";
+import { ReadonlyArraySignal } from "./ReadonlyArraySignal.ts";
 
 /**
  * A writable signal for arrays. Provides pretty much all common array functions while automatically tracking changes.
@@ -198,7 +198,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> {
      * @param newElements - Elements to insert into the array in place of the deleted elements.
      * @returns An array containing the elements that were deleted.
      */
-    public splice(start: number, deleteCount: number = 0, ...newElements: T[]): T[] {
+    public splice(start: number, deleteCount = 0, ...newElements: T[]): T[] {
         if (newElements.length === 0 && (deleteCount <= 0 || start >= this.length)) {
             // Short-cut when call can't possibly change the array
             return [];
@@ -227,7 +227,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> {
      * @param fromIndex     - The array index at which to begin the search. If omitted, the search starts at index 0.
      * @returns The index of the first occurrence of the given element, or -1 if not found.
      */
-    public indexOf(searchElement: T, fromIndex: number = 0): number {
+    public indexOf(searchElement: T, fromIndex = 0): number {
         return this.get().indexOf(searchElement, fromIndex);
     }
 
@@ -238,7 +238,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> {
      * @param fromIndex     - The array index at which to begin the search. If omitted, the search starts at the last index in the array.
      * @returns The index of the last occurrence of the given element, or -1 if not found.
      */
-    public lastIndexOf(searchElement: T, fromIndex: number = -1): number {
+    public lastIndexOf(searchElement: T, fromIndex = -1): number {
         return this.get().lastIndexOf(searchElement, fromIndex);
     }
 
@@ -468,7 +468,7 @@ export class WritableArraySignal<T> extends BaseSignal<readonly T[]> {
  *
  * @param elements - The initial elements to copy into the array signal. Defaults to empty array.
  * @param options  - Optional signal options.
- * @return The created writable array signal.
+ * @returns The created writable array signal.
  */
 export function arraySignal<T>(elements?: T[], options?: BaseSignalOptions<T>): WritableArraySignal<T> {
     return new WritableArraySignal(elements, options);

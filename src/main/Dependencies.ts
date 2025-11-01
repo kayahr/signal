@@ -3,8 +3,8 @@
  * See LICENSE.md for licensing information
  */
 
-import { Dependency } from "./Dependency.js";
-import type { Signal } from "./Signal.js";
+import { Dependency } from "./Dependency.ts";
+import type { Signal } from "./Signal.ts";
 
 /** The active dependencies used to record dependencies when a signal is used during a computation. */
 let activeDependencies: Dependencies | null = null;
@@ -164,7 +164,9 @@ export class Dependencies {
         activeDependencies = this;
 
         // Mark all dependencies as unused. Will be marked as used again if really used. The rest can be removed later.
-        this.dependencies.forEach(dependency => dependency.setUsed(false));
+        for (const dependency of this.dependencies) {
+            dependency.setUsed(false);
+        }
         this.recording = true;
         try {
             return fn();
@@ -179,7 +181,9 @@ export class Dependencies {
      * Unsubscribes from all dependencies and removes them.
      */
     public destroy(): void {
-        this.dependencies.forEach(dependency => dependency.destroy());
+        for (const dependency of this.dependencies) {
+            dependency.destroy();
+        }
         this.dependencies.clear();
         this.index.clear();
     }

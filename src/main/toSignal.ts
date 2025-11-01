@@ -5,10 +5,10 @@
 
 import type { Subscribable } from "@kayahr/observable";
 
-import type { BaseSignalOptions } from "./BaseSignal.js";
-import { ComputedSignal } from "./ComputedSignal.js";
-import { ObserverSignal, ObserverSignalOptions } from "./ObserverSignal.js";
-import { Signal } from "./Signal.js";
+import type { BaseSignalOptions } from "./BaseSignal.ts";
+import { ComputedSignal } from "./ComputedSignal.ts";
+import { ObserverSignal, type ObserverSignalOptions } from "./ObserverSignal.ts";
+import { Signal } from "./Signal.ts";
 
 /**
  * The allowed signal source types.

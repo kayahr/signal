@@ -7,7 +7,7 @@ import "symbol-observable";
 
 import type { Observer, Unsubscribable } from "@kayahr/observable";
 
-import { Signal } from "./Signal.js";
+import { Signal } from "./Signal.ts";
 
 /**
  * Readonly wrapper for a signal.
@@ -26,32 +26,32 @@ export class ReadonlySignal<T = unknown> extends Signal<T> {
         this.signal = signal;
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public subscribe(observer: Observer<T> | ((next: T) => void)): Unsubscribable {
         return this.signal.subscribe(observer);
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public getVersion(): unknown {
         return this.signal.getVersion();
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public isWatched(): boolean {
         return this.signal.isWatched();
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public isValid(): boolean {
         return this.signal.isValid();
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public validate(): void {
         this.signal.validate();
     }
 
-    /** @inheritDoc */
+    /** @inheritdoc */
     public get(): T {
         return this.signal.get();
     }

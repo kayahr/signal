@@ -5,9 +5,9 @@
 
 import type { Subscribable, Unsubscribable } from "@kayahr/observable";
 
-import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.js";
-import type { Destroyable } from "./Destroyable.js";
-import { registerDestroyable } from "./SignalContext.js";
+import { BaseSignal, type BaseSignalOptions } from "./BaseSignal.ts";
+import type { Destroyable } from "./Destroyable.ts";
+import { registerDestroyable } from "./SignalContext.ts";
 
 /**
  * Options for {@link ObserverSignal}.
