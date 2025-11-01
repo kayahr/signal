@@ -5,16 +5,5 @@
     ],
     "env": {
         "node": true
-    },
-    "rules": {
-        "typescript/no-this-alias": "off",
-        "unicorn/no-array-method-this-argument": "off",
-        "unicorn/no-array-for-each": "off",
-        "eslint/no-return-assign": "off",
-        "eslint/no-unused-vars": "off",
-        "unicorn/consistent-function-scoping": "off",
-        "unicorn/require-array-join-separator": "off",
-        "unicorn/no-array-reverse": "off",
-        "unicorn/no-array-sort": "off"
     }
 }

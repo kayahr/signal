@@ -9,7 +9,7 @@ import { describe, it } from "node:test";
 import { ComputedSignal, computed } from "../main/ComputedSignal.ts";
 import { signal } from "../main/WritableSignal.ts";
 import { Context } from "./support/Context.ts";
-import { assertGreaterThan, assertSame, assertThrowWithMessage } from "@kayahr/assert";
+import { assertGarbageCollected, assertGreaterThan, assertSame, assertThrowWithMessage } from "@kayahr/assert";
 
 describe("ComputedSignal", () => {
     it("is destroyed via signal context if present", (c) => {
@@ -243,7 +243,7 @@ describe("ComputedSignal", () => {
         const b = computed(() => a.get() * 2);
         let c: ComputedSignal<number> | null = new ComputedSignal(() => a.get() + b.get());
         assertSame(c.get(), 3);
-        // TODO await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
+        await assertGarbageCollected(new WeakRef(c), () => { c = null; });
     });
 
     it("is garbage collected correctly after last observer is unsubscribed", async () => {
@@ -252,6 +252,6 @@ describe("ComputedSignal", () => {
         let c: ComputedSignal<number> | null = new ComputedSignal(() => a.get() + b.get());
         assertSame(c.get(), 3);
         c.subscribe(() => {}).unsubscribe();
-        // TODO await expect(new WeakRef(c)).toBeGarbageCollected(() => { c = null; });
+        await assertGarbageCollected(new WeakRef(c), () => { c = null; });
     });
 });

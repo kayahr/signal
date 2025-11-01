@@ -12,7 +12,8 @@
                 "src/test/**/*.test.ts"
             ],
             "parameters": [
-                "--experimental-test-coverage"
+                "--experimental-test-coverage",
+                "--expose-gc"
             ]
         }
     ],

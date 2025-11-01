@@ -7,5 +7,6 @@
     ],
     "coverage": {
         "enabled": true
-    }
+    },
+    "exposeGC": true
 }
