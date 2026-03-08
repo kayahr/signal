@@ -50,7 +50,7 @@ export class Dependencies {
 
         // Any change on a dependency must call the getter
         for (const dependency of this.dependencies) {
-            dependency.watch(() => untracked(this.owner));
+            dependency.watch(() => { untracked(this.owner) });
         }
     }
 
@@ -114,7 +114,7 @@ export class Dependencies {
 
             // When owner is watched then start watching this new dependency
             if (this.owner.isWatched()) {
-                dependency.watch(() => untracked(this.owner));
+                dependency.watch(() => { untracked(this.owner) });
             }
         } else {
             // Update existing dependency

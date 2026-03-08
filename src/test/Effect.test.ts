@@ -113,7 +113,7 @@ describe("Effect", () => {
     it("does not track dependencies in cleanup function", (context) => {
         const a = signal(1);
         const b = signal(2);
-        const cleanup = context.mock.fn(() => b.get());
+        const cleanup = context.mock.fn(() => { b.get() });
         effect(() => { a.get(); return cleanup; });
         assertSame(cleanup.mock.callCount(), 0);
         a.set(2);

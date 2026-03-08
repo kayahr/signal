@@ -330,7 +330,7 @@ describe("ReadonlyArraySignal", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
             let sum = 0;
-            roArray.forEach(v => sum += v);
+            roArray.forEach(v => { sum += v });
             assertSame(sum, 6);
         });
         it("sends correct arguments to callback", () => {
@@ -351,7 +351,7 @@ describe("ReadonlyArraySignal", () => {
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             const roArray = array.asReadonly();
-            const sum = computed(() => { let sum = 0; roArray.forEach(v => sum += v); return sum; });
+            const sum = computed(() => { let sum = 0; roArray.forEach(v => { sum += v }); return sum; });
             assertSame(sum.get(), 6);
             array.push(4);
             assertSame(sum.get(), 10);

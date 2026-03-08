@@ -648,7 +648,7 @@ describe("WritableArraySignal", () => {
         it("iterates over all elements", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
             let sum = 0;
-            array.forEach(v => sum += v);
+            array.forEach(v => { sum += v });
             assertSame(sum, 6);
         });
         it("sends correct arguments to callback", () => {
@@ -667,7 +667,7 @@ describe("WritableArraySignal", () => {
         });
         it("tracks signal as dependency", () => {
             const array = new WritableArraySignal([ 1, 2, 3 ]);
-            const sum = computed(() => { let sum = 0; array.forEach(v => sum += v); return sum; });
+            const sum = computed(() => { let sum = 0; array.forEach(v => { sum += v }); return sum; });
             assertSame(sum.get(), 6);
             array.push(4);
             assertSame(sum.get(), 10);
