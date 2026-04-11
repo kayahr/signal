@@ -5,9 +5,13 @@
     ],
     "basePath": "src/main",
     "entryPointStrategy": "resolve",
+    "projectDocuments": [
+        "doc/index.md"
+    ],
     "out": "lib/apidoc",
     "excludePrivate": true,
     "excludeExternals": true,
+    "excludeInternal": true,
     "treatWarningsAsErrors": true,
     "validation": true,
     "plugin": [

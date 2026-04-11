@@ -1,16 +1,28 @@
 {
     "$schema": "https://json.schemastore.org/package",
     "name": "@kayahr/signal",
-    "version": "4.2.0",
+    "version": "5.0.0",
     "type": "module",
-    "description": "Standalone signal implementation",
+    "description": "Standalone signals library for browser and Node.js",
     "keywords": [
+        "signal",
+        "signals",
+        "reactive",
+        "reactivity",
+        "state",
+        "memo",
+        "effect",
         "observable",
-        "signal"
+        "typescript",
+        "browser",
+        "nodejs"
     ],
     "license": "MIT",
     "author": "Klaus Reimer <k@ailis.de>",
-    "repository": "github:kayahr/signal",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kayahr/signal.git"
+    },
     "homepage": "https://github.com/kayahr/signal",
     "bugs": "https://github.com/kayahr/signal/issues",
     "funding": "https://github.com/kayahr/signal?sponsor=1",
@@ -28,9 +40,9 @@
         "build:compile": "tsc",
         "test": "run test:*",
         "test:unit": "ntest",
+        "test:spell": "cspell --no-progress --no-summary",
         "test:lint": "oxlint --type-aware --deny-warnings",
         "test:apidoc": "typedoc --emit none",
-        "test:spell": "cspell --no-progress --no-summary",
         "apidoc": "typedoc",
         "prepare": "run clean build"
     },
@@ -39,10 +51,10 @@
         "@kayahr/cspell": "9.7.0-bundle.1",
         "@kayahr/npm-utils": "1.1.2",
         "@kayahr/ntest": "1.3.0",
-        "@kayahr/oxlint-config": "1.31.1",
+        "@kayahr/oxlint-config": "1.32.0",
         "@kayahr/typedoc": "0.28.18-bundle.1",
-        "@types/node": "25.5.0",
-        "rxjs": "7.8.2",
+        "@types/node": "25.6.0",
+        "rxjs": "^7.8.2",
         "typescript": "6.0.2"
     },
     "dependencies": {

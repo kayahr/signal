@@ -1,20 +1,28 @@
 /*
- * Copyright (C) 2024 Klaus Reimer <k@ailis.de>
- * See LICENSE.md for licensing information
+ * Copyright (C) 2026 Klaus Reimer
+ * SPDX-License-Identifier: MIT
  */
 
-export { atomic } from "./atomic.ts";
-export { BaseSignal, type BaseSignalOptions } from "./BaseSignal.ts";
-export { computed, ComputedSignal, type ComputeFunction } from "./ComputedSignal.ts";
-export { track, untracked } from "./Dependencies.ts";
-export { type Destroyable } from "./Destroyable.ts";
-export { type CleanupFunction, Effect, effect, type EffectFunction } from "./Effect.ts";
-export { type EqualFunction } from "./EqualFunction.ts";
-export { ObserverSignal, type ObserverSignalOptions } from "./ObserverSignal.ts";
-export { ReadonlyArraySignal } from "./ReadonlyArraySignal.ts";
-export { ReadonlySignal } from "./ReadonlySignal.ts";
-export { type Signal } from "./Signal.ts";
-export { setSignalContext, type SignalContext } from "./SignalContext.ts";
-export { type SignalSource, toSignal } from "./toSignal.ts";
-export { arraySignal, WritableArraySignal } from "./WritableArraySignal.ts";
-export { signal, WritableSignal } from "./WritableSignal.ts";
+/// <reference lib="esnext.disposable" />
+
+/**
+ * Public API entry point for this library.
+ *
+ * @module signal
+ */
+
+export { type Disposer, dispose } from "./dispose.ts";
+export type { DisposableGetter } from "./DisposableGetter.ts";
+export type { Getter } from "./Getter.ts";
+export type { Setter } from "./Setter.ts";
+export { type ArrayMutator, createArraySignal } from "./array.ts";
+export { type CreateEffectOptions, type Effect, type EffectContext, type EffectFunction, createEffect } from "./effect.ts";
+export { type CreateMemoOptions, createMemo } from "./memo.ts";
+export { SignalError } from "./error.ts";
+export { type ToSignalOptions, toObservable, toSignal, toSubscriber } from "./observable.ts";
+export { createResource, ResourceStatus } from "./resource.ts";
+export type { CreateResourceOptions, Resource, ResourceLoader } from "./resource.ts";
+export { type ScopeContext, createScope } from "./scope.ts";
+export { batch } from "./scheduler.ts";
+export { type CreateSignalOptions, createSignal } from "./signal.ts";
+export { untrack } from "./untrack.ts";

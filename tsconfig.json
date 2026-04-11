@@ -7,8 +7,7 @@
         "forceConsistentCasingInFileNames": true,
         "lib": [
             "ES2022",
-            "ES2022.Array",
-            "DOM"
+            "ESNext.Disposable"
         ],
         "module": "node20",
         "newLine": "lf",
@@ -28,7 +27,6 @@
         "sourceMap": true,
         "strict": true,
         "target": "es2022",
-        "useDefineForClassFields": false,
         "types": [ "node" ]
     }
 }
