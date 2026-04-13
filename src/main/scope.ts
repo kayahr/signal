@@ -3,30 +3,19 @@
  * SPDX-License-Identifier: MIT
  */
 
-import type { Disposer } from "./dispose.ts";
-import { throwErrors } from "./error.ts";
+import { type Disposer, attachDisposer } from "./dispose.ts";
+import { SignalError, throwErrors } from "./error.ts";
 
-/** Internal ownership scope used while registering effect, memo and nested-scope cleanups. */
-interface Scope {
-    /** Cleanups owned directly by this scope. */
-    cleanups: Set<Disposer>;
-
-    /** Disposes this scope and all currently owned cleanups. */
-    dispose: Disposer;
-
-    /** Parent scope that owns this scope, or null for top-level scopes. */
-    parent: Scope | null;
-
+/**
+ * Public reactive ownership scope.
+ *
+ * A scope owns reactive handles created while {@link run} executes synchronously.
+ */
+export interface Scope extends Disposable {
     /** Whether this scope already ran its disposal sequence. */
-    disposed: boolean;
-}
+    readonly disposed: boolean;
 
-/** Scope that currently owns newly created reactive resources. */
-let activeScope: Scope | null = null;
-
-/** Context object passed to a scope callback. */
-export interface ScopeContext {
-    /** Disposes the scope and all resources currently owned by it. */
+    /** Disposes this scope and all resources currently owned by it. */
     dispose: Disposer;
 
     /**
@@ -35,65 +24,70 @@ export interface ScopeContext {
      * @param cleanup - The cleanup callback.
      */
     onDispose(cleanup: Disposer): void;
+
+    /**
+     * Runs the given callback with this scope active.
+     *
+     * Only the synchronous part of the callback belongs to this scope.
+     *
+     * @param func - The callback to run inside this scope.
+     * @returns The value returned by the callback.
+     * @throws {@link SignalError} - When the scope was already disposed.
+     */
+    run<T>(func: () => T): T;
 }
+
+/** Internal ownership scope used while registering effect, memo and nested-scope cleanups. */
+interface OwnedScope extends Scope {
+    /** Cleanups owned directly by this scope. */
+    cleanups: Set<Disposer>;
+
+    /** Parent scope that owns this scope, or null for top-level scopes. */
+    parent: OwnedScope | null;
+
+    /** Disposes all currently owned cleanups and returns collected errors. */
+    runCleanups(): readonly unknown[];
+}
+
+/** Scope that currently owns newly created reactive resources. */
+let activeScope: OwnedScope | null = null;
+
+/**
+ * Creates a reusable reactive ownership scope.
+ *
+ * The returned scope can be activated later through {@link Scope.run} and disposed through {@link Scope.dispose} or {@link dispose}.
+ *
+ * @returns The created scope handle.
+ */
+export function createScope(): Scope;
 
 /**
  * Creates a reactive ownership scope and returns the value produced by the callback.
  *
- * Reactive handles created while the callback runs are owned by this scope and are disposed together when `context.dispose` is called.
- * That includes memos, effects, resources, observable conversions and nested scopes. All of them can still be disposed manually earlier
- * through {@link dispose}.
+ * This is shorthand for creating a scope and immediately running the callback inside it. Reactive handles created while the callback runs
+ * are owned by this scope and are disposed together when `scope.dispose` is called. That includes memos, effects, resources, observable
+ * conversions and nested scopes. All of them can still be disposed manually earlier through {@link dispose}.
  *
- * `context.onDispose` registers additional cleanup work on this scope. Only the synchronous part of the callback belongs to the scope, so
- * work created after an `await` would no longer belong to it. A common pattern is to create reactive handles inside the scope, return the
- * handles you want to keep and later call the returned `context.dispose`.
+ * `scope.onDispose` registers additional cleanup work on this scope. Only the synchronous part of the callback belongs to the scope, so
+ * work created after an `await` would no longer belong to it.
  *
- * @param func - Creates reactive resources inside the scope and receives the scope context.
+ * If the callback throws, the created scope is disposed immediately. If scope cleanup also fails, the callback error is listed first in
+ * the resulting aggregate error.
+ *
+ * @param func - Creates reactive resources inside the scope and receives the scope handle.
  * @returns The value returned by the callback.
  */
-export function createScope<T>(func: (context: ScopeContext) => T): T {
-    const parent = activeScope;
-    const cleanups = new Set<Disposer>();
-    function runScopeCleanups(): readonly unknown[] {
-        if (scope.disposed) {
-            return [];
-        }
-        scope.disposed = true;
-        parent?.cleanups.delete(disposeScope);
-        const pendingCleanups = [ ...cleanups ];
-        cleanups.clear();
-        const errors: unknown[] = [];
-        for (const cleanup of pendingCleanups) {
-            try {
-                cleanup();
-            } catch (error) {
-                errors.push(error);
-            }
-        }
-        return errors;
+export function createScope<T>(func: (scope: Scope) => T): T;
+
+export function createScope<T>(func?: (scope: Scope) => T): Scope | T {
+    const scope = createOwnedScope();
+    if (func == null) {
+        return scope;
     }
-    function disposeScope(): void {
-        const errors = runScopeCleanups();
-        if (errors.length > 0) {
-            throwErrors(errors, "Scope cleanup failed");
-        }
-    }
-    const scope: Scope = { cleanups, dispose: disposeScope, parent, disposed: false };
-    parent?.cleanups.add(disposeScope);
-    activeScope = scope;
-    const context: ScopeContext = {
-        dispose: disposeScope,
-        onDispose(cleanup) {
-            addCleanup(scope, cleanup);
-        }
-    };
     try {
-        const result = func(context);
-        activeScope = parent;
-        return result;
+        return scope.run(() => func(scope));
     } catch (error) {
-        activeScope = parent;
-        const cleanupErrors = runScopeCleanups();
+        const cleanupErrors = scope.runCleanups();
         if (cleanupErrors.length === 0) {
             throw error;
         }
@@ -121,10 +115,77 @@ export function registerCleanup(cleanup: Disposer): Disposer {
  * @param scope   - The scope owning the cleanup.
  * @param cleanup - The cleanup to register.
  */
-function addCleanup(scope: Scope, cleanup: Disposer): void {
+function addCleanup(scope: OwnedScope, cleanup: Disposer): void {
     if (scope.disposed) {
         cleanup();
     } else {
         scope.cleanups.add(cleanup);
     }
+}
+
+/**
+ * Creates a new scope handle owned by the currently active parent scope.
+ *
+ * @returns The created scope.
+ */
+function createOwnedScope(): OwnedScope {
+    const parent = activeScope;
+    const cleanups = new Set<Disposer>();
+    let disposed = false;
+
+    function runCleanups(): readonly unknown[] {
+        if (disposed) {
+            return [];
+        }
+        disposed = true;
+        parent?.cleanups.delete(disposeScope);
+        const currentCleanups = [ ...cleanups ];
+        cleanups.clear();
+        const errors: unknown[] = [];
+        for (const cleanup of currentCleanups) {
+            try {
+                cleanup();
+            } catch (error) {
+                errors.push(error);
+            }
+        }
+        return errors;
+    }
+
+    function disposeScope(): void {
+        const errors = runCleanups();
+        if (errors.length > 0) {
+            throwErrors(errors, "Scope cleanup failed");
+        }
+    }
+
+    function run<T>(func: () => T): T {
+        if (disposed) {
+            throw new SignalError("Cannot run in a disposed scope");
+        }
+        const previousScope = activeScope;
+        activeScope = scope;
+        try {
+            return func();
+        } finally {
+            activeScope = previousScope;
+        }
+    }
+
+    const scopeData = {
+        cleanups,
+        parent,
+        runCleanups,
+        get disposed() {
+            return disposed;
+        },
+        dispose: disposeScope,
+        onDispose(cleanup: Disposer) {
+            addCleanup(scope, cleanup);
+        },
+        run
+    };
+    const scope = attachDisposer(scopeData, disposeScope) as OwnedScope;
+    parent?.cleanups.add(disposeScope);
+    return scope;
 }

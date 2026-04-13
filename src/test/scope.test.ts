@@ -8,11 +8,33 @@ import { assertEquals, assertInstanceOf, assertSame, assertThrowWithMessage } fr
 import { createEffect } from "../main/effect.ts";
 import { SignalError } from "../main/error.ts";
 import { createMemo } from "../main/memo.ts";
-import { createScope } from "../main/scope.ts";
+import { type Scope, createScope } from "../main/scope.ts";
 import { createSignal } from "../main/signal.ts";
 import type { Disposer } from "../main/dispose.ts";
 
 describe("createScope", () => {
+    it("creates a reusable scope handle without a callback", () => {
+        const [ value, setValue ] = createSignal(0);
+        const seen: number[] = [];
+        const scope: Scope = createScope();
+
+        scope.run(() => {
+            createEffect(() => {
+                seen.push(value());
+                return value();
+            });
+        });
+
+        assertEquals(seen, [ 0 ]);
+
+        setValue(1);
+        assertEquals(seen, [ 0, 1 ]);
+
+        scope.dispose();
+        setValue(2);
+        assertEquals(seen, [ 0, 1 ]);
+    });
+
     it("disposes owned effects when the scope is disposed", () => {
         const [ value, setValue ] = createSignal(0);
         const seen: number[] = [];
@@ -257,6 +279,47 @@ describe("createScope", () => {
         });
 
         assertEquals(seen, [ "late" ]);
+    });
+
+    it("throws when running a disposed scope", () => {
+        const scope: Scope = createScope();
+
+        scope.dispose();
+
+        assertThrowWithMessage(() => {
+            scope.run(() => 1);
+        }, SignalError, "Cannot run in a disposed scope");
+    });
+
+    it("supports later scope reentry through run", () => {
+        const [ value, setValue ] = createSignal(0);
+        const scope: Scope = createScope();
+        const seen: number[] = [];
+
+        scope.run(() => {
+            createEffect(() => {
+                seen.push(value());
+                return value();
+            });
+        });
+
+        setValue(1);
+
+        scope.run(() => {
+            createEffect(() => {
+                seen.push(value() * 10);
+                return value();
+            });
+        });
+
+        assertEquals(seen, [ 0, 1, 10 ]);
+
+        setValue(2);
+        assertEquals(seen, [ 0, 1, 10, 2, 20 ]);
+
+        scope.dispose();
+        setValue(3);
+        assertEquals(seen, [ 0, 1, 10, 2, 20 ]);
     });
 
     it("immediately disposes effects created after the scope was already disposed", () => {

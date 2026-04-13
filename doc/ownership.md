@@ -10,13 +10,15 @@ Signals are plain state and do not need cleanup.
 Memos, effects, resources and observable conversions can hold subscriptions to other reactive nodes or external sources. If they are part of
 a long-lived graph, you need a clear place that owns them.
 
-`createScope` is synchronous in the sense that only the synchronous part of the callback belongs to the scope. Create the reactive handles
-inside that synchronous part, return the handles you want to keep, and dispose the scope later when that owned subgraph should stop.
+`createScope` can either return a reusable scope handle or run a callback immediately as shorthand. `scope.run(...)` is synchronous in the
+sense that only the synchronous part of the callback belongs to the scope. Create the reactive handles inside that synchronous part and
+dispose the scope later when that owned subgraph should stop.
 
 ```ts
 import { createEffect, createMemo, createScope, createSignal } from "@kayahr/signal";
 
-const { setCount, dispose } = createScope(({ dispose, onDispose }) => {
+const scope = createScope();
+const { setCount } = scope.run(() => {
     const [ count, setCount ] = createSignal(0);
     const doubled = createMemo(() => count() * 2);
 
@@ -24,18 +26,22 @@ const { setCount, dispose } = createScope(({ dispose, onDispose }) => {
         console.log(doubled());
     });
 
-    onDispose(() => {
+    scope.onDispose(() => {
         console.log("scope disposed");
     });
 
-    return { setCount, dispose };
+    return { setCount };
 });
 
 setCount(1);
 
 // ...
-dispose();
+scope.dispose();
 ```
+
+`createScope(scope => ...)` is shorthand for creating a scope and immediately running a callback inside it. That is convenient when the
+scope is only needed during setup. A persistent scope handle is more flexible when later async callbacks need to register additional
+reactive work on the same scope.
 
 Scopes are the normal ownership boundary for long-lived reactive graphs:
 
@@ -44,7 +50,7 @@ Scopes are the normal ownership boundary for long-lived reactive graphs:
 - Resources are also registered on the active scope.
 - Observable conversions like `toSignal` are also registered on the active scope.
 - Nested scopes are disposed with their parent scope.
-- `onDispose` registers additional cleanup work directly on the current scope.
+- `scope.onDispose` registers additional cleanup work directly on the current scope.
 
 If multiple scope cleanups fail, disposing the scope throws an `AggregateError`.
 

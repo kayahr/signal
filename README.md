@@ -46,9 +46,10 @@ setCount(previous => previous + 1);
 Use a scope when you want explicit ownership and later cleanup for a whole reactive subgraph:
 
 ```ts
-import { createEffect, createMemo, createResource, createScope, createSignal } from "@kayahr/signal";
+import { ResourceStatus, createEffect, createMemo, createResource, createScope, createSignal } from "@kayahr/signal";
 
-const { setCount, setUserId, dispose } = createScope(({ dispose }) => {
+const scope = createScope();
+const { setCount, setUserId } = scope.run(() => {
     const [ count, setCount ] = createSignal(0);
     const doubled = createMemo(() => count() * 2);
     const [ userId, setUserId ] = createSignal(1);
@@ -58,13 +59,13 @@ const { setCount, setUserId, dispose } = createScope(({ dispose }) => {
     });
 
     createEffect(() => {
-        console.log(`count=${count()} doubled=${doubled()} loading=${resource.loading()}`);
-        if (resource.status() === "ready") {
+        console.log(`count=${count()} doubled=${doubled()}`);
+        if (resource.status() === ResourceStatus.Ready) {
             console.log(user()?.name);
         }
     });
 
-    return { setCount, setUserId, dispose };
+    return { setCount, setUserId };
 });
 
 setCount(1);
@@ -72,7 +73,7 @@ setCount(previous => previous + 1);
 setUserId(2);
 
 // ...
-dispose();
+scope.dispose();
 ```
 
 ## Documentation

@@ -22,7 +22,7 @@ export { SignalError } from "./error.ts";
 export { type ToSignalOptions, toObservable, toSignal, toSubscriber } from "./observable.ts";
 export { createResource, ResourceStatus } from "./resource.ts";
 export type { CreateResourceOptions, Resource, ResourceLoader } from "./resource.ts";
-export { type ScopeContext, createScope } from "./scope.ts";
+export { type Scope, createScope } from "./scope.ts";
 export { batch } from "./scheduler.ts";
 export { type CreateSignalOptions, createSignal } from "./signal.ts";
 export { untrack } from "./untrack.ts";
