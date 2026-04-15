@@ -5,10 +5,9 @@
 
 import { describe, it } from "node:test";
 import { assertEquals, assertInstanceOf, assertSame, assertThrowWithMessage } from "@kayahr/assert";
+import { createScope, dispose } from "@kayahr/scope";
 import { createEffect } from "../main/effect.ts";
-import { dispose } from "../main/dispose.ts";
 import { createMemo } from "../main/memo.ts";
-import { createScope } from "../main/scope.ts";
 import { createSignal } from "../main/signal.ts";
 
 describe("createEffect", () => {
@@ -141,15 +140,15 @@ describe("createEffect", () => {
         const [ value, setValue ] = createSignal(0);
         let disposeScope!: () => void;
 
-        createScope(({ dispose }) => {
-            disposeScope = dispose;
+        createScope(scope => {
+            disposeScope = () => scope.dispose();
             createEffect(({ onCleanup }) => {
                 const current = value();
                 onCleanup(() => {
                     throw new Error("cleanup boom");
                 });
                 if (current === 1) {
-                    dispose();
+                    scope.dispose();
                 }
                 return current;
             });
@@ -167,6 +166,28 @@ describe("createEffect", () => {
         assertEquals(thrown.errors.map(error => error instanceof Error ? error.message : String(error)), [ "cleanup boom", "cleanup boom" ]);
 
         disposeScope();
+    });
+
+    it("registers effects on a reusable owning scope activated through run", () => {
+        const [ value, setValue ] = createSignal(0);
+        const seen: number[] = [];
+        const scope = createScope();
+
+        scope.run(() => {
+            createEffect(() => {
+                seen.push(value());
+                return value();
+            });
+        });
+
+        assertEquals(seen, [ 0 ]);
+
+        setValue(1);
+        assertEquals(seen, [ 0, 1 ]);
+
+        scope.dispose();
+        setValue(2);
+        assertEquals(seen, [ 0, 1 ]);
     });
 
     it("aggregates multiple cleanup errors on rerun", () => {
@@ -244,6 +265,23 @@ describe("createEffect", () => {
         dispose(effect);
         setValue(4);
         assertEquals(seen, [ 1, 2 ]);
+    });
+
+    it("immediately disposes effects created after the owning scope was already disposed", () => {
+        const [ value ] = createSignal(0);
+        let runs = 0;
+
+        const result = createScope(scope => {
+            scope.dispose();
+            createEffect(() => {
+                runs++;
+                return value();
+            });
+            return "done";
+        });
+
+        assertSame(result, "done");
+        assertSame(runs, 0);
     });
 
     it("runs immediately and reruns when a direct dependency changes", () => {

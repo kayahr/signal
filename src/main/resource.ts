@@ -4,11 +4,10 @@
  */
 
 import { batch } from "./scheduler.ts";
-import { attachDisposer } from "./dispose.ts";
+import { createScope } from "@kayahr/scope";
 import { createEffect } from "./effect.ts";
 import { toError } from "./error.ts";
 import type { Getter } from "./Getter.ts";
-import { createScope } from "./scope.ts";
 import { createSignal } from "./signal.ts";
 
 const NONE = Symbol();
@@ -91,7 +90,7 @@ export interface Resource extends Disposable {
 /**
  * Internal resource controls implementation shared through the prototype.
  */
-class ResourceState {
+class ResourceState implements Resource {
     /** Getter for the last resource error. */
     readonly #error: Getter<Error | undefined>;
 
@@ -101,17 +100,22 @@ class ResourceState {
     /** Imperative reload action. */
     readonly #reload: () => void;
 
+    /** Manual disposal hook required by the public resource contract. */
+    public readonly [Symbol.dispose]!: () => void;
+
     /**
      * Creates a resource controller from the given state accessors and actions.
      *
      * @param error   - Getter for the last resource error.
      * @param status  - Getter for the current resource status.
      * @param reload  - Reload action.
+     * @param dispose - Disposal action.
      */
-    public constructor(error: Getter<Error | undefined>, status: Getter<ResourceStatus>, reload: () => void) {
+    public constructor(error: Getter<Error | undefined>, status: Getter<ResourceStatus>, reload: () => void, dispose: () => void) {
         this.#error = error;
         this.#status = status;
         this.#reload = reload;
+        this[Symbol.dispose] = dispose;
     }
 
     /**
@@ -145,7 +149,7 @@ class ResourceState {
  *
  * The resource eagerly loads from the current source value and reloads whenever the source changes or `resource.reload()` is called.
  * Concurrent loads are cancelled through an abort signal and stale results are ignored. The returned resource object can be manually
- * disposed through {@link dispose}.
+ * disposed manually.
  *
  * @param source  - Getter providing the current load source.
  * @param load    - Loads the resource value for the current source.
@@ -159,7 +163,7 @@ export function createResource<S, T>(source: Getter<S>, load: ResourceLoader<S, 
  *
  * The resource eagerly loads from the current source value and reloads whenever the source changes or `resource.reload()` is called.
  * Concurrent loads are cancelled through an abort signal and stale results are ignored. The returned resource object can be manually
- * disposed through {@link dispose}.
+ * disposed manually.
  *
  * @param source  - Getter providing the current load source.
  * @param load    - Loads the resource value for the current source.
@@ -178,7 +182,7 @@ export function createResource<S, T, Init>(source: Getter<S>, load: ResourceLoad
     const [ reloadVersion, setReloadVersion ] = createSignal(0);
     let disposed = false;
 
-    const dispose = createScope(({ dispose, onDispose }) => {
+    const dispose = createScope(scope => {
         createEffect(({ onCleanup }) => {
             reloadVersion();
             const abortController = new AbortController();
@@ -230,23 +234,24 @@ export function createResource<S, T, Init>(source: Getter<S>, load: ResourceLoad
             }
         });
 
-        onDispose(() => {
+        scope.onDispose(() => {
             disposed = true;
             setStatus(ResourceStatus.Disposed);
         });
 
-        return dispose;
+        return () => scope.dispose();
     });
 
-    const resource = attachDisposer(new ResourceState(
+    const resource = new ResourceState(
         error,
         status,
         () => {
             if (!disposed) {
                 setReloadVersion(previous => previous + 1);
             }
-        }
-    ), dispose);
+        },
+        dispose
+    );
 
     return [
         () => {

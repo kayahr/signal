@@ -1,7 +1,6 @@
 # Array Signals
 
-Plain `createSignal<T[]>` works, but it is clumsy for in-place array mutation. `createArraySignal` exists to make that case honest and
-cheap.
+Plain `createSignal<T[]>` works, but it is clumsy for in-place array mutation. `createArraySignal` exists to make that case honest and cheap.
 
 ## Creating an Array Signal
 

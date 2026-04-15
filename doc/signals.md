@@ -24,8 +24,7 @@ The setter also accepts an updater function:
 setCount(previous => previous + 1);
 ```
 
-When the signal value is itself a function, wrap direct writes in another function so the setter does not interpret the new function as an
-updater:
+When the signal value is itself a function, wrap direct writes in another function so the setter does not interpret the new function as an updater:
 
 ```ts
 const [ handler, setHandler ] = createSignal(() => "hello");
@@ -54,8 +53,7 @@ import { createMemo, untrack } from "@kayahr/signal";
 const total = createMemo(() => count() + untrack(bonus));
 ```
 
-`total` depends on `count`, but not on `bonus`. If `bonus` changes, `total` stays clean. When `count` changes later, the next memo run
-still reads the latest `bonus` value.
+`total` depends on `count`, but not on `bonus`. If `bonus` changes, `total` stays clean. When `count` changes later, the next memo run still reads the latest `bonus` value.
 
 ## Equality Behavior
 
@@ -82,8 +80,7 @@ const [ tick, setTick ] = createSignal(0, {
 });
 ```
 
-That is useful for event-like signals or for cases where every write must be observed even when the value is referentially or structurally
-the same.
+That is useful for event-like signals or for cases where every write must be observed even when the value is referentially or structurally the same.
 
 ## When to Use Signals
 

@@ -4,9 +4,10 @@
  */
 
 import { describe, it } from "node:test";
-import { assertSame, assertThrowWithMessage } from "@kayahr/assert";
-import { dispose } from "../main/dispose.ts";
+import { assertEquals, assertSame, assertThrowWithMessage } from "@kayahr/assert";
+import { createScope, dispose } from "@kayahr/scope";
 import { SignalError } from "../main/error.ts";
+import { createEffect } from "../main/effect.ts";
 import { createMemo } from "../main/memo.ts";
 import { createSignal } from "../main/signal.ts";
 
@@ -221,5 +222,82 @@ describe("createMemo", () => {
 
         dispose(doubled);
         assertThrowWithMessage(() => doubled(), SignalError, "Cannot read a disposed memo");
+    });
+
+    it("is disposed with its owning scope", () => {
+        const [ value, setValue ] = createSignal(1);
+        let runs = 0;
+        let doubled!: () => number;
+        let disposeScope!: () => void;
+
+        createScope(scope => {
+            doubled = createMemo(() => {
+                runs++;
+                return value() * 2;
+            });
+            disposeScope = () => scope.dispose();
+        });
+
+        assertSame(doubled(), 2);
+        assertSame(runs, 1);
+
+        setValue(2);
+        assertSame(doubled(), 4);
+        assertSame(runs, 2);
+
+        disposeScope();
+        setValue(3);
+        assertThrowWithMessage(() => doubled(), SignalError, "Cannot read a disposed memo");
+        assertSame(runs, 2);
+    });
+
+    it("throws when its owning scope is disposed before the first read", () => {
+        const [ value ] = createSignal(1);
+        let doubled!: () => number;
+        let disposeScope!: () => void;
+
+        createScope(scope => {
+            doubled = createMemo(() => value() * 2);
+            disposeScope = () => scope.dispose();
+        });
+
+        disposeScope();
+
+        assertThrowWithMessage(() => doubled(), SignalError, "Cannot read a disposed memo");
+    });
+
+    it("keeps disposed memos inert while external effects rerun", () => {
+        const [ trigger, setTrigger ] = createSignal(0);
+        const [ value ] = createSignal(1);
+        let memo!: () => number;
+        let disposeMemoScope!: () => void;
+
+        createScope(scope => {
+            memo = createMemo(() => value() * 2);
+            disposeMemoScope = () => scope.dispose();
+        });
+
+        const errors: string[] = [];
+        let disposeEffectScope!: () => void;
+        createScope(scope => {
+            disposeEffectScope = () => scope.dispose();
+            createEffect(() => {
+                try {
+                    memo();
+                } catch (error) {
+                    errors.push(error instanceof Error ? error.message : String(error));
+                }
+                trigger();
+                return trigger();
+            });
+        });
+
+        assertEquals(errors, []);
+
+        disposeMemoScope();
+        setTrigger(1);
+
+        assertEquals(errors, [ "Cannot read a disposed memo" ]);
+        disposeEffectScope();
     });
 });

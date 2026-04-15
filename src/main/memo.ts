@@ -4,11 +4,10 @@
  */
 
 import { Computation } from "./Computation.ts";
-import { attachDisposer } from "./dispose.ts";
+import { onDispose } from "@kayahr/scope";
 import type { DisposableGetter } from "./DisposableGetter.ts";
 import { SignalError } from "./error.ts";
 import { Producer } from "./Producer.ts";
-import { registerCleanup } from "./scope.ts";
 
 /** Sentinel used before a memo produced its first value. */
 const NONE = Symbol();
@@ -35,7 +34,7 @@ export interface CreateMemoOptions<T> {
  *
  * Dependencies are tracked dynamically from the values read during the last execution of `func`.
  *
- * Memos can be manually disposed through {@link dispose}. When created inside a scope, they are also disposed with that scope.
+ * Memos can be manually disposed. When created inside a scope, they are also disposed with that scope.
  * Reading a disposed memo throws {@link SignalError}.
  *
  * Scope-less memos still work, but once a memo has been read it stays subscribed to its current dependencies until it is disposed.
@@ -49,10 +48,11 @@ export function createMemo<T>(func: () => T, { equals = Object.is }: CreateMemoO
     let disposed = false;
     let value: T | typeof NONE = NONE;
     let computation: Computation | null = null;
-    const dispose = registerCleanup(() => {
+    const dispose = (): void => {
         disposed = true;
         computation?.dispose();
-    });
+    };
+    onDispose(dispose);
     const producer = new Producer(() => {
         if (disposed) {
             return;
@@ -69,13 +69,14 @@ export function createMemo<T>(func: () => T, { equals = Object.is }: CreateMemoO
             producer.change();
         }
     });
-    const getter = () => {
+    const getter = (() => {
         if (disposed) {
             throw new SignalError("Cannot read a disposed memo");
         }
         producer.refresh();
         Computation.track(producer);
         return value as T;
-    };
-    return attachDisposer(getter, dispose);
+    }) as DisposableGetter<T>;
+    getter[Symbol.dispose] = dispose;
+    return getter;
 }

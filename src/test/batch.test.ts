@@ -5,9 +5,9 @@
 
 import { describe, it } from "node:test";
 import { assertEquals, assertInstanceOf, assertSame, assertThrowWithMessage } from "@kayahr/assert";
+import { createScope } from "@kayahr/scope";
 import { batch } from "../main/index.ts";
 import { createEffect } from "../main/effect.ts";
-import { createScope } from "../main/scope.ts";
 import { createSignal } from "../main/signal.ts";
 
 describe("batch", () => {

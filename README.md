@@ -4,16 +4,18 @@
 
 Small, framework-independent signals for TypeScript.
 
-`signal` provides a small reactive core with explicit ownership, lazy memos, synchronous effects and async resources. Its API is
-heavily inspired by SolidJS while staying usable as a standalone library in browsers and Node.js, without framework lifecycles.
+`signal` provides a small reactive core with explicit ownership, lazy memos, synchronous effects and async resources. Its API is heavily inspired by SolidJS while staying usable as a standalone library in browsers and Node.js, without framework lifecycles.
+
 Observable interop is available through [`@kayahr/observable`](https://www.npmjs.com/package/@kayahr/observable).
+
+Scope management and ownership boundaries are provided by [`@kayahr/scope`](https://www.npmjs.com/package/@kayahr/scope).
 
 ## Features
 
 - Writable signals with configurable equality
 - Lazy memos with dynamic dependency tracking
 - Synchronous effects with cleanup and previous-value support
-- Optional scopes for ownership and disposal
+- Optional ownership scopes
 - Synchronous batching and explicit `untrack`
 - Async resources with loading, error, reload and disposal control
 - Array signals without deep array comparisons
@@ -46,7 +48,8 @@ setCount(previous => previous + 1);
 Use a scope when you want explicit ownership and later cleanup for a whole reactive subgraph:
 
 ```ts
-import { ResourceStatus, createEffect, createMemo, createResource, createScope, createSignal } from "@kayahr/signal";
+import { createScope } from "@kayahr/scope";
+import { ResourceStatus, createEffect, createMemo, createResource, createSignal } from "@kayahr/signal";
 
 const scope = createScope();
 const { setCount, setUserId } = scope.run(() => {
@@ -84,7 +87,6 @@ scope.dispose();
 - [Array Signals](doc/arrays.md)
 - [Resources](doc/resources.md)
 - [Observable Interop](doc/observables.md)
-- [Ownership and Cleanup](doc/ownership.md)
 
 [API Doc]: https://kayahr.github.io/signal/
 [GitHub]: https://github.com/kayahr/signal

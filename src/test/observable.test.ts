@@ -5,9 +5,9 @@
 
 import { Observable as KayahrObservable, type SubscriptionObserver } from "@kayahr/observable";
 import { assertEquals, assertSame, assertThrowWithMessage } from "@kayahr/assert";
+import { createScope, dispose } from "@kayahr/scope";
 import { BehaviorSubject, Observable as RxObservable } from "rxjs";
 import { describe, it } from "node:test";
-import { dispose } from "../main/dispose.ts";
 import { SignalError } from "../main/error.ts";
 import { createMemo } from "../main/memo.ts";
 import { toObservable, toSignal, toSubscriber } from "../main/observable.ts";
@@ -157,6 +157,27 @@ describe("observable interop", () => {
         dispose(value);
         source.next(7);
         assertSame(value(), 6);
+    });
+
+    it("disposes an observable conversion with its owning scope", () => {
+        let observer!: SubscriptionObserver<number>;
+        const source = new KayahrObservable<number>(currentObserver => {
+            observer = currentObserver;
+        });
+        let value!: () => number | undefined;
+        let disposeScope!: () => void;
+
+        createScope(scope => {
+            value = toSignal(source);
+            disposeScope = () => scope.dispose();
+        });
+
+        observer.next(1);
+        assertSame(value(), 1);
+
+        disposeScope();
+        observer.next(2);
+        assertSame(value(), 1);
     });
 
     it("supports an initial value before the source emits", () => {

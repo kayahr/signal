@@ -48,8 +48,7 @@ Memos use `Object.is` by default to decide whether downstream invalidation is ne
 const parity = createMemo(() => count() % 2);
 ```
 
-If `count` changes from `1` to `3`, the memo recomputes, but the memo result stays `1`. Downstream computations are therefore not
-invalidated.
+If `count` changes from `1` to `3`, the memo recomputes, but the memo result stays `1`. Downstream computations are therefore not invalidated.
 
 You can override this behavior:
 
@@ -76,7 +75,8 @@ With `equals: false`, downstream computations are invalidated after every recomp
 Memos can be disposed with `dispose(...)`:
 
 ```ts
-import { createMemo, dispose } from "@kayahr/signal";
+import { dispose } from "@kayahr/scope";
+import { createMemo } from "@kayahr/signal";
 
 const doubled = createMemo(() => count() * 2);
 

@@ -5,11 +5,10 @@
 
 import { describe, it } from "node:test";
 import { assertSame } from "@kayahr/assert";
-import { dispose } from "../main/dispose.ts";
+import { createScope, dispose } from "@kayahr/scope";
 import { batch } from "../main/scheduler.ts";
 import { createMemo } from "../main/memo.ts";
 import { type Resource, ResourceStatus, createResource } from "../main/resource.ts";
-import { createScope } from "../main/scope.ts";
 import { createSignal } from "../main/signal.ts";
 
 describe("createResource", () => {
@@ -322,14 +321,14 @@ describe("createResource", () => {
         let user!: () => number | undefined;
         let resource!: Resource;
 
-        createScope(({ dispose }) => {
+        createScope(scope => {
             [ user, resource ] = createResource(userId, (_id, abortSignal) => {
                 abortSignals.push(abortSignal);
                 const deferred = createDeferred<number>();
                 requests.push(deferred);
                 return deferred.promise;
             });
-            disposeScope = dispose;
+            disposeScope = () => scope.dispose();
         });
 
         requests[0].resolve(10);

@@ -4,9 +4,8 @@
  */
 
 import { Computation } from "./Computation.ts";
-import { type Disposer, attachDisposer } from "./dispose.ts";
+import { onDispose } from "@kayahr/scope";
 import { throwErrors } from "./error.ts";
-import { registerCleanup } from "./scope.ts";
 import { scheduleJob } from "./scheduler.ts";
 
 /** Options for creating an eager reactive effect. */
@@ -27,11 +26,11 @@ export interface EffectContext<Value> {
      *
      * @param cleanup - The cleanup callback.
      */
-    onCleanup(cleanup: Disposer): void;
+    onCleanup(cleanup: () => void): void;
 }
 
 /**
- * Handle returned by {@link createEffect} for manual disposal through {@link dispose}.
+ * Handle returned by {@link createEffect} for manual disposal.
  */
 export interface Effect extends Disposable {}
 
@@ -53,24 +52,23 @@ export type EffectFunction<Previous, Next> = (context: EffectContext<Previous | 
  *
  * `context.onCleanup` registers callbacks that run before the next execution and when the effect is disposed.
  *
- * Effects return an explicit handle for manual disposal through {@link dispose} and additionally register their cleanup on the active
- * scope, if there is one.
+ * Effects return an explicit handle for manual disposal and additionally register their cleanup on the active scope, if there is one.
  *
  * @param func    - The effect body to execute.
  * @param options - Optional effect behavior overrides.
- * @returns An effect handle that can be passed to {@link dispose}.
+ * @returns An effect handle for manual disposal.
  */
 export function createEffect<Next>(func: EffectFunction<undefined, Next>, options?: CreateEffectOptions<undefined>): Effect;
 export function createEffect<Init, Next>(func: EffectFunction<Init, Next>, options: CreateEffectOptions<Init> & { initial: Init }): Effect;
 export function createEffect<Init, Next>(func: EffectFunction<Init | undefined, Next>, { initial }: CreateEffectOptions<Init> = {}): Effect {
     let previous: Init | Next | undefined = initial;
-    let cleanups: Disposer[] = [];
+    let cleanups: Array<() => void> = [];
     let running = false;
     let disposed = false;
     const update = () => {
         if (computation.shouldRun()) {
             const cleanupErrors = runCleanups(cleanups);
-            const currentCleanups: Disposer[] = [];
+            const currentCleanups: Array<() => void> = [];
             running = true;
             let disposalCleanupErrors: readonly unknown[] = [];
             let effectError: unknown = null;
@@ -107,7 +105,7 @@ export function createEffect<Init, Next>(func: EffectFunction<Init | undefined, 
     const computation = new Computation(() => {
         scheduleJob(update);
     });
-    const dispose = registerCleanup(() => {
+    const dispose = (): void => {
         if (disposed) {
             return;
         }
@@ -119,9 +117,10 @@ export function createEffect<Init, Next>(func: EffectFunction<Init | undefined, 
                 throwErrors(errors, "Effect cleanup failed");
             }
         }
-    });
+    };
+    onDispose(dispose);
     scheduleJob(update);
-    return attachDisposer({}, dispose);
+    return { [Symbol.dispose]: dispose };
 }
 
 /**
@@ -132,7 +131,7 @@ export function createEffect<Init, Next>(func: EffectFunction<Init | undefined, 
  * @param cleanups - The cleanup callbacks to run.
  * @returns The collected cleanup errors.
  */
-function runCleanups(cleanups: Disposer[]): readonly unknown[] {
+function runCleanups(cleanups: Array<() => void>): readonly unknown[] {
     const errors: unknown[] = [];
     for (const cleanup of cleanups) {
         try {

@@ -6,8 +6,7 @@ This library provides two high-level bridges and one low-level bridge:
 - `toObservable`
 - `toSubscriber`
 
-The library depends on `@kayahr/observable` for the observable API surface. For RxJS and other implementations, `toSubscriber` is the
-low-level escape hatch.
+The library depends on `@kayahr/observable` for the observable API surface. For RxJS and other implementations, `toSubscriber` is the low-level escape hatch.
 
 ## toSignal
 
@@ -73,8 +72,7 @@ That is a good fit for current-value observables such as `BehaviorSubject`.
 
 `equals` works exactly like it does for signals, memos, and resources. By default, `toSignal` uses `Object.is`.
 
-Use a custom equality function when the observable emits new object instances but dependents should only react when a meaningful part actually
-changed.
+Use a custom equality function when the observable emits new object instances but dependents should only react when a meaningful part actually changed.
 
 ```ts
 const user = toSignal(source, {
@@ -106,15 +104,15 @@ When the source completes:
 - no further observable updates arrive
 - `dispose(value)` still exists, but usually has nothing left to do because the source has already removed the subscription
 
-In practice, that means the getter simply keeps returning the last value until the signal itself becomes unreachable and can be garbage
-collected.
+In practice, that means the getter simply keeps returning the last value until the signal itself becomes unreachable and can be garbage collected.
 
 ### Disposal
 
 The returned getter can be manually disposed with `dispose(...)` and is also registered on the active scope, if there is one.
 
 ```ts
-import { dispose, toSignal } from "@kayahr/signal";
+import { dispose } from "@kayahr/scope";
+import { toSignal } from "@kayahr/signal";
 
 const value = toSignal(source, {
     initialValue: 0
@@ -149,5 +147,4 @@ import { toSubscriber } from "@kayahr/signal";
 const observable = new Observable<number>(toSubscriber(count));
 ```
 
-That is the intended path when you want to stay inside another observable ecosystem without forcing this library to expose every foreign
-observable type directly.
+That is the intended path when you want to stay inside another observable ecosystem without forcing this library to expose every foreign observable type directly.

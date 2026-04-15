@@ -7,7 +7,6 @@ import { describe, it } from "node:test";
 import { assertEquals } from "@kayahr/assert";
 import * as exports from "../main/index.ts";
 import type { DisposableGetter } from "../main/DisposableGetter.ts";
-import { type Disposer, dispose } from "../main/dispose.ts";
 import { SignalError } from "../main/error.ts";
 import { batch } from "../main/scheduler.ts";
 import type { Getter } from "../main/Getter.ts";
@@ -17,7 +16,6 @@ import { type CreateEffectOptions, type Effect, type EffectContext, type EffectF
 import { type CreateMemoOptions, createMemo } from "../main/memo.ts";
 import { type ToSignalOptions, toObservable, toSignal, toSubscriber } from "../main/observable.ts";
 import { type CreateResourceOptions, type Resource, type ResourceLoader, ResourceStatus, type ResourceStatus as ResourceStatusType, createResource } from "../main/resource.ts";
-import { type Scope, createScope } from "../main/scope.ts";
 import { type CreateSignalOptions, createSignal } from "../main/signal.ts";
 import { untrack } from "../main/untrack.ts";
 
@@ -27,10 +25,8 @@ describe("index", () => {
         assertEquals({ ...exports }, {
             createArraySignal,
             batch,
-            dispose,
             createEffect,
             createResource,
-            createScope,
             createMemo,
             createSignal,
             ResourceStatus,
@@ -43,7 +39,6 @@ describe("index", () => {
 
         // Interfaces and types can only be checked by TypeScript
         ((): ArrayMutator<number> => (({} as exports.ArrayMutator<number>)))();
-        ((): Disposer => (({} as exports.Disposer)))();
         ((): DisposableGetter<number> => (({} as exports.DisposableGetter<number>)))();
         ((): Effect => (({} as exports.Effect)))();
         ((): Getter<number> => (({} as exports.Getter<number>)))();
@@ -57,7 +52,6 @@ describe("index", () => {
         ((): Resource => (({} as exports.Resource)))();
         ((): ResourceLoader<number, number> => (({} as exports.ResourceLoader<number, number>)))();
         ((): ResourceStatusType => (({} as exports.ResourceStatus)))();
-        ((): Scope => (({} as exports.Scope)))();
         ((): ToSignalOptions<number> => (({} as exports.ToSignalOptions<number>)))();
     });
 });

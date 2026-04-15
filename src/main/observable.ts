@@ -4,12 +4,11 @@
  */
 
 import { Observable, type ObservableLike, type Subscribable, type SubscriberFunction } from "@kayahr/observable";
-import { attachDisposer } from "./dispose.ts";
+import { createScope, onDispose } from "@kayahr/scope";
 import { createEffect } from "./effect.ts";
 import type { DisposableGetter } from "./DisposableGetter.ts";
 import { SignalError, toError } from "./error.ts";
 import type { Getter } from "./Getter.ts";
-import { createScope, registerCleanup } from "./scope.ts";
 import { createSignal } from "./signal.ts";
 
 /** Options for converting an observable to a signal. */
@@ -42,7 +41,7 @@ export interface ToSignalOptions<T, Init = never> {
  * @returns A subscriber function that can be passed to an observable constructor.
  */
 export function toSubscriber<T>(getter: Getter<T>): SubscriberFunction<T> {
-    return observer => createScope(({ dispose }) => {
+    return observer => createScope(scope => {
         createEffect(() => {
             try {
                 observer.next(getter());
@@ -50,11 +49,11 @@ export function toSubscriber<T>(getter: Getter<T>): SubscriberFunction<T> {
                 try {
                     observer.error(toError(error));
                 } finally {
-                    dispose();
+                    scope.dispose();
                 }
             }
         });
-        return dispose;
+        return () => scope.dispose();
     });
 }
 
@@ -77,7 +76,7 @@ export function toObservable<T>(getter: Getter<T>): ObservableLike<T> {
  * The returned getter always has a value because the observable is required to emit synchronously during subscription. When the observable
  * errors, the getter throws that failure normalized to an {@link Error}.
  *
- * The returned getter can be manually disposed through {@link dispose} and is additionally registered on the active scope, if there is one.
+ * The returned getter can be manually disposed and is additionally registered on the active scope, if there is one.
  * Observable completion keeps the last signal value and does not dispose the conversion automatically.
  *
  * @param observable - The observable to subscribe to.
@@ -93,7 +92,7 @@ export function toSignal<T>(observable: Subscribable<T>, options: ToSignalOption
  * The returned getter yields the latest observable value. If `requireSync` is set, then the conversion throws unless the observable emits
  * synchronously during subscription. When the observable errors, the getter throws that failure normalized to an {@link Error}.
  *
- * The returned getter can be manually disposed through {@link dispose} and is additionally registered on the active scope, if there is one.
+ * The returned getter can be manually disposed and is additionally registered on the active scope, if there is one.
  * Observable completion keeps the last signal value and does not dispose the conversion automatically.
  *
  * @param options    - Optional conversion behavior overrides without an explicit initial value.
@@ -107,7 +106,7 @@ export function toSignal<T>(observable: Subscribable<T>, options?: ToSignalOptio
  * The returned getter yields the configured initial value until the observable emits for the first time. When the observable errors, the
  * getter throws that failure normalized to an {@link Error}.
  *
- * The returned getter can be manually disposed through {@link dispose} and is additionally registered on the active scope, if there is one.
+ * The returned getter can be manually disposed and is additionally registered on the active scope, if there is one.
  * Observable completion keeps the last signal value and does not dispose the conversion automatically.
  *
  * @param observable - The observable to subscribe to.
@@ -130,21 +129,23 @@ export function toSignal<T, Init>(observable: Subscribable<T>,
     }, nextError => {
         error = toError(nextError);
     });
-    const dispose = registerCleanup(() => {
+    const dispose = (): void => {
         subscription.unsubscribe();
-    });
+    };
+    onDispose(dispose);
 
     if (requireSync && !sawSynchronousValue) {
         dispose();
         throw new SignalError("Observable did not emit synchronously");
     }
 
-    const getter = () => {
+    const getter = (() => {
         if (error != null) {
             throw error;
         }
         const current = value();
         return current;
-    };
-    return attachDisposer(getter, dispose);
+    }) as DisposableGetter<T | Init | undefined>;
+    getter[Symbol.dispose] = dispose;
+    return getter;
 }

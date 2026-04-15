@@ -26,8 +26,7 @@ resource.reload();
 
 The first tuple entry is a getter for the latest successful resource value. The second entry exposes status and control methods.
 
-This is the typical browser shape: a reactive id, a fetch call using the provided `AbortSignal`, and optional manual reloads for the
-current source value.
+This is the typical browser shape: a reactive id, a fetch call using the provided `AbortSignal`, and optional manual reloads for the current source value.
 
 ## Node.js Example
 
@@ -47,8 +46,7 @@ const [ content ] = createResource(path, async (currentPath, abortSignal) => {
 setPath("/tmp/other.txt");
 ```
 
-`readFile` itself does not support cancellation, so the abort signal cannot stop the filesystem read. It still prevents stale results from
-being committed after the resource was reloaded or disposed.
+`readFile` itself does not support cancellation, so the abort signal cannot stop the filesystem read. It still prevents stale results from being committed after the resource was reloaded or disposed.
 
 ## Status and Controls
 
@@ -110,15 +108,13 @@ const [ user ] = createResource(userId, loadUser, {
 });
 ```
 
-When `skip` returns `true`, the loader is not called. The current resource value stays unchanged, previous resource errors are cleared, and
-the resource enters `idle` state.
+When `skip` returns `true`, the loader is not called. The current resource value stays unchanged, previous resource errors are cleared, and the resource enters `idle` state.
 
 ## Cancellation and Stale Results
 
 Every load receives an `AbortSignal`.
 
-When the source changes, the resource is reloaded manually, or the resource is disposed, the previous in-flight load is aborted. If an old
-request still resolves later, its result is ignored.
+When the source changes, the resource is reloaded manually, or the resource is disposed, the previous in-flight load is aborted. If an old request still resolves later, its result is ignored.
 
 That prevents stale async results from overwriting newer state.
 
@@ -149,7 +145,8 @@ Set `equals: false` when every successful load should invalidate dependents, eve
 Resources are disposable through the resource handle returned as the second tuple entry.
 
 ```ts
-import { createResource, dispose } from "@kayahr/signal";
+import { dispose } from "@kayahr/scope";
+import { createResource } from "@kayahr/signal";
 
 const [ user, resource ] = createResource(userId, loadUser);
 

@@ -5,10 +5,10 @@
 
 import { describe, it } from "node:test";
 import { assertEquals, assertSame } from "@kayahr/assert";
+import { createScope } from "@kayahr/scope";
 import { createEffect } from "../main/effect.ts";
 import { createMemo } from "../main/memo.ts";
 import { createSignal } from "../main/signal.ts";
-import { createScope } from "../main/scope.ts";
 import { untrack } from "../main/untrack.ts";
 
 describe("untrack", () => {

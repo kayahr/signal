@@ -6,6 +6,6 @@
 import type { Getter } from "./Getter.ts";
 
 /**
- * Getter that can be manually disposed through {@link dispose}.
+ * Getter that can be manually disposed.
  */
 export interface DisposableGetter<T> extends Getter<T>, Disposable {}

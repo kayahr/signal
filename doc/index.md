@@ -7,7 +7,6 @@ children:
   Array Signals: arrays.md
   Resources: resources.md
   Observable Interop: observables.md
-  Ownership and Cleanup: ownership.md
 ---
 
 # Documentation
@@ -18,4 +17,3 @@ children:
 - [Array Signals](arrays.md)
 - [Resources](resources.md)
 - [Observable Interop](observables.md)
-- [Ownership and Cleanup](ownership.md)

@@ -72,8 +72,7 @@ createEffect(({ previous }: EffectContext<number>) => {
 
 With `initial`, `previous` starts with that value and no longer includes `undefined`.
 
-TypeScript cannot infer the type of `previous` from the effect return type in this API shape. If you read `previous`, annotate the context
-explicitly as shown above. If you only use `onCleanup`, no annotation is needed.
+TypeScript cannot infer the type of `previous` from the effect return type in this API shape. If you read `previous`, annotate the context explicitly as shown above. If you only use `onCleanup`, no annotation is needed.
 
 ## Batching
 
@@ -113,7 +112,8 @@ The effect flush still happens only once after the outermost batch finishes.
 Effects return disposable handles. Use `dispose(...)` when an effect should stop before an owning scope is disposed.
 
 ```ts
-import { createEffect, dispose } from "@kayahr/signal";
+import { dispose } from "@kayahr/scope";
+import { createEffect } from "@kayahr/signal";
 
 const effect = createEffect(() => {
     console.log(count());
