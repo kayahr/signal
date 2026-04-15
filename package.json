@@ -58,7 +58,7 @@
         "typescript": "6.0.2"
     },
     "dependencies": {
-        "@kayahr/scope": "^1.0.0",
-        "@kayahr/observable": "^1.2.0"
+        "@kayahr/observable": "^1.2.0",
+        "@kayahr/scope": "^1.0.0"
     }
 }
