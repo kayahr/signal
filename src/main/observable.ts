@@ -74,7 +74,7 @@ export function toObservable<T>(getter: Getter<T>): ObservableLike<T> {
  * Converts an observable to a signal getter.
  *
  * The returned getter always has a value because the observable is required to emit synchronously during subscription. When the observable
- * errors, the getter throws that failure normalized to an {@link Error}.
+ * errors, the getter throws that failure normalized to an {@link !Error}.
  *
  * The returned getter can be manually disposed and is additionally registered on the active scope, if there is one.
  * Observable completion keeps the last signal value and does not dispose the conversion automatically.
@@ -90,7 +90,7 @@ export function toSignal<T>(observable: Subscribable<T>, options: ToSignalOption
  * Converts an observable to a signal getter.
  *
  * The returned getter yields the latest observable value. If `requireSync` is set, then the conversion throws unless the observable emits
- * synchronously during subscription. When the observable errors, the getter throws that failure normalized to an {@link Error}.
+ * synchronously during subscription. When the observable errors, the getter throws that failure normalized to an {@link !Error}.
  *
  * The returned getter can be manually disposed and is additionally registered on the active scope, if there is one.
  * Observable completion keeps the last signal value and does not dispose the conversion automatically.
@@ -104,7 +104,7 @@ export function toSignal<T>(observable: Subscribable<T>, options?: ToSignalOptio
  * Converts an observable to a signal getter.
  *
  * The returned getter yields the configured initial value until the observable emits for the first time. When the observable errors, the
- * getter throws that failure normalized to an {@link Error}.
+ * getter throws that failure normalized to an {@link !Error}.
  *
  * The returned getter can be manually disposed and is additionally registered on the active scope, if there is one.
  * Observable completion keeps the last signal value and does not dispose the conversion automatically.

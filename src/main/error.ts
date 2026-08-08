@@ -17,7 +17,7 @@ export class SignalError extends Error {
 }
 
 /**
- * Normalizes thrown values to {@link Error} instances.
+ * Normalizes thrown values to {@link !Error} instances.
  *
  * @param error - The thrown value.
  * @returns The normalized error.
@@ -27,7 +27,7 @@ export function toError(error: unknown): Error {
 }
 
 /**
- * Throws the given collected failures normalized to {@link Error}.
+ * Throws the given collected failures normalized to {@link !Error}.
  *
  * A single entry is thrown directly after normalization. Multiple entries are normalized and thrown as an {@link AggregateError}.
  *
