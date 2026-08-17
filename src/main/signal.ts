@@ -39,13 +39,12 @@ export function createSignal<T>(value: T, { equals = Object.is }: CreateSignalOp
             Computation.track(producer);
             return value;
         },
-        <U extends T>(arg: U | ((value: T) => U)) => {
+        (arg: T | ((value: T) => T)): void => {
             const newValue = typeof arg === "function" ? (arg as (v: T) => T)(value) : arg;
             if (equals === false || !equals(value, newValue)) {
                 value = newValue;
                 producer.change();
             }
-            return newValue;
         }
     ];
 }

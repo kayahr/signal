@@ -9,15 +9,15 @@ import { createMemo } from "../main/memo.ts";
 import { createSignal } from "../main/signal.ts";
 
 describe("createSignal", () => {
-    it("returns the current value and supports functional updates", () => {
+    it("updates the current value directly and functionally", () => {
         const [ value, setValue ] = createSignal(1);
 
         assertSame(value(), 1);
 
-        assertSame(setValue(2), 2);
+        assertSame(setValue(2), undefined);
         assertSame(value(), 2);
 
-        assertSame(setValue(current => current + 3), 5);
+        assertSame(setValue(current => current + 3), undefined);
         assertSame(value(), 5);
     });
 
@@ -29,7 +29,7 @@ describe("createSignal", () => {
         assertSame(handler(), firstHandler);
         assertSame(handler()(), "first");
 
-        assertSame(setHandler(() => secondHandler), secondHandler);
+        assertSame(setHandler(() => secondHandler), undefined);
         assertSame(handler(), secondHandler);
         assertSame(handler()(), "second");
     });

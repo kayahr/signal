@@ -10,12 +10,12 @@ import { createSignal } from "@kayahr/signal";
 const [ count, setCount ] = createSignal(0);
 ```
 
-The getter returns the current value. The setter writes a new value and returns the value that was written.
+The getter returns the current value. The setter writes a new value.
 
 ```ts
-count();       // 0
-setCount(1);   // 1
-count();       // 1
+count();     // 0
+setCount(1);
+count();     // 1
 ```
 
 The setter also accepts an updater function:
