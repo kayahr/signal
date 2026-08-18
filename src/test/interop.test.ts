@@ -143,6 +143,19 @@ describe("promise and observable interop", () => {
         assertSame(value(), 1);
     });
 
+    it("stores functions emitted by an observable as values", () => {
+        let observer!: SubscriptionObserver<() => number>;
+        const source = new KayahrObservable<() => number>(currentObserver => {
+            observer = currentObserver;
+        });
+        const value = toSignal(source);
+        const nextValue = () => 1;
+
+        observer.next(nextValue);
+
+        assertSame(value(), nextValue);
+    });
+
     it("converts an rxjs observable to a signal", () => {
         const source = new BehaviorSubject(5);
         const value = toSignal(source, {
@@ -342,6 +355,16 @@ describe("promise and observable interop", () => {
         resolve(1);
         await source;
         assertSame(value(), 1);
+    });
+
+    it("stores functions fulfilled by a promise as values", async () => {
+        const nextValue = () => 1;
+        const source = Promise.resolve(nextValue);
+        const value = toSignal(source);
+
+        await source;
+
+        assertSame(value(), nextValue);
     });
 
     it("supports an initial value while converting a promise", async () => {

@@ -163,7 +163,7 @@ export function toSignal<T, Init>(source: Promise<T> | Subscribable<T>,
         if (active) {
             sawSynchronousValue = true;
             error = null;
-            setValue(nextValue as T | Init);
+            setValue(() => nextValue);
         }
     };
     const updateError = (nextError: unknown): void => {
