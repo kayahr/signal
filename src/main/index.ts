@@ -16,7 +16,7 @@ export { type ArrayMutator, createArraySignal } from "./array.ts";
 export { type CreateEffectOptions, type Effect, type EffectContext, type EffectFunction, createEffect } from "./effect.ts";
 export { type CreateMemoOptions, createMemo } from "./memo.ts";
 export { SignalError } from "./error.ts";
-export { type ToSignalOptions, toObservable, toSignal, toSubscriber } from "./observable.ts";
+export { type ObservableToSignalOptions, type ToSignalOptions, toObservable, toSignal, toSubscriber } from "./interop.ts";
 export { createResource, ResourceStatus } from "./resource.ts";
 export type { CreateResourceOptions, Resource, ResourceLoader } from "./resource.ts";
 export { batch } from "./scheduler.ts";

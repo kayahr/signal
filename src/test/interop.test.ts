@@ -10,10 +10,10 @@ import { BehaviorSubject, Observable as RxObservable } from "rxjs";
 import { describe, it } from "node:test";
 import { SignalError } from "../main/error.ts";
 import { createMemo } from "../main/memo.ts";
-import { toObservable, toSignal, toSubscriber } from "../main/observable.ts";
+import { toObservable, toSignal, toSubscriber } from "../main/interop.ts";
 import { createSignal } from "../main/signal.ts";
 
-describe("observable interop", () => {
+describe("promise and observable interop", () => {
     it("converts a signal getter to an observable-like object", () => {
         const [ value, setValue ] = createSignal(1);
         const seen: number[] = [];
@@ -222,6 +222,28 @@ describe("observable interop", () => {
         assertSame(runs, 2);
     });
 
+    it("compares the first observable emission to undefined without an initial value", () => {
+        let observer!: SubscriptionObserver<{ parity: number }>;
+        const source = new KayahrObservable<{ parity: number }>(currentObserver => {
+            observer = currentObserver;
+        });
+        let comparisons = 0;
+        const value = toSignal(source, {
+            equals: (previous, next) => {
+                comparisons++;
+                return previous?.parity === next?.parity;
+            }
+        });
+
+        observer.next({ parity: 1 });
+        assertSame(value()?.parity, 1);
+        assertSame(comparisons, 1);
+
+        observer.next({ parity: 1 });
+        assertSame(value()?.parity, 1);
+        assertSame(comparisons, 2);
+    });
+
     it("supports equals false while converting an observable to a signal", () => {
         let observer!: SubscriptionObserver<number>;
         const source = new KayahrObservable<number>(currentObserver => {
@@ -306,5 +328,138 @@ describe("observable interop", () => {
 
         dispose(value);
         assertSame(value(), 1);
+    });
+
+    it("converts a promise to a signal getter", async () => {
+        let resolve!: (value: number) => void;
+        const source = new Promise<number>(callback => {
+            resolve = callback;
+        });
+        const value = toSignal(source);
+
+        assertSame(value(), undefined);
+
+        resolve(1);
+        await source;
+        assertSame(value(), 1);
+    });
+
+    it("supports an initial value while converting a promise", async () => {
+        let resolve!: (value: number) => void;
+        const source = new Promise<number>(callback => {
+            resolve = callback;
+        });
+        const value = toSignal(source, {
+            initialValue: 99
+        });
+
+        assertSame(value(), 99);
+
+        resolve(1);
+        await source;
+        assertSame(value(), 1);
+    });
+
+    it("supports custom equality while converting a promise", async () => {
+        let resolve!: (value: { parity: number }) => void;
+        const source = new Promise<{ parity: number }>(callback => {
+            resolve = callback;
+        });
+        const initialValue = { parity: 1 };
+        const value = toSignal(source, {
+            initialValue,
+            equals: (previous, next) => previous.parity === next.parity
+        });
+
+        resolve({ parity: 1 });
+        await source;
+        assertSame(value(), initialValue);
+    });
+
+    it("supports equals false while converting a promise", async () => {
+        let resolve!: (value: number) => void;
+        const source = new Promise<number>(callback => {
+            resolve = callback;
+        });
+        const value = toSignal(source, {
+            initialValue: 1,
+            equals: false
+        });
+        let runs = 0;
+        const memo = createMemo(() => {
+            runs++;
+            return value();
+        });
+
+        assertSame(memo(), 1);
+        assertSame(runs, 1);
+
+        resolve(1);
+        await source;
+        assertSame(memo(), 1);
+        assertSame(runs, 2);
+    });
+
+    it("throws a normalized promise rejection when the signal is read", async () => {
+        let reject!: (error: unknown) => void;
+        const source = new Promise<number>((_resolve, callback) => {
+            reject = callback;
+        });
+        const value = toSignal(source, {
+            initialValue: 0
+        });
+
+        reject("boom");
+        await source.catch(() => undefined);
+
+        assertThrowWithMessage(() => value(), Error, "boom");
+    });
+
+    it("ignores promise fulfillment and rejection after manual disposal", async () => {
+        let resolve!: (value: number) => void;
+        const fulfilledSource = new Promise<number>(callback => {
+            resolve = callback;
+        });
+        const fulfilledValue = toSignal(fulfilledSource, {
+            initialValue: 1
+        });
+        dispose(fulfilledValue);
+        dispose(fulfilledValue);
+
+        resolve(2);
+        await fulfilledSource;
+        assertSame(fulfilledValue(), 1);
+
+        let reject!: (error: unknown) => void;
+        const rejectedSource = new Promise<number>((_resolve, callback) => {
+            reject = callback;
+        });
+        const rejectedValue = toSignal(rejectedSource, {
+            initialValue: 3
+        });
+        dispose(rejectedValue);
+
+        reject(new Error("ignored"));
+        await rejectedSource.catch(() => undefined);
+        assertSame(rejectedValue(), 3);
+    });
+
+    it("ignores promise fulfillment after its owning scope is disposed", async () => {
+        let resolve!: (value: number) => void;
+        const source = new Promise<number>(callback => {
+            resolve = callback;
+        });
+        let value!: () => number | undefined;
+        let disposeScope!: () => void;
+
+        createScope(scope => {
+            value = toSignal(source);
+            disposeScope = () => scope.dispose();
+        });
+        disposeScope();
+
+        resolve(1);
+        await source;
+        assertSame(value(), undefined);
     });
 });

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { Observable, type ObservableLike, type Subscribable, type SubscriberFunction } from "@kayahr/observable";
+import { Observable, type ObservableLike, type Subscribable, type SubscriberFunction, type Unsubscribable } from "@kayahr/observable";
 import { createScope, onDispose } from "@kayahr/scope";
 import { createEffect } from "./effect.ts";
 import type { DisposableGetter } from "./DisposableGetter.ts";
@@ -11,12 +11,12 @@ import { SignalError, toError } from "./error.ts";
 import type { Getter } from "./Getter.ts";
 import { createSignal } from "./signal.ts";
 
-/** Options for converting an observable to a signal. */
-export interface ToSignalOptions<T, Init = never> {
+/** Options for converting a promise or observable to a signal. */
+export interface ToSignalOptions<T, Init = undefined> {
     /**
      * Compares the previous and next signal value.
      *
-     * Returning true suppresses the update and keeps dependent computations clean. Set this to false to force an update for every emission.
+     * Returning true suppresses the update and keeps dependent computations clean. Set this to false to force an update for every source value.
      *
      * @param previous - The previous signal value.
      * @param next     - The next signal value.
@@ -24,9 +24,12 @@ export interface ToSignalOptions<T, Init = never> {
      */
     equals?: false | ((previous: T | Init, next: T | Init) => boolean);
 
-    /** The initial signal value used before the observable emits for the first time. */
+    /** The initial signal value used before the source produces its first value. */
     initialValue?: Init;
+}
 
+/** Options specific to converting an observable to a signal. */
+export interface ObservableToSignalOptions<T, Init = undefined> extends ToSignalOptions<T, Init> {
     /** Forces the observable to emit a value synchronously during subscription. */
     requireSync?: boolean;
 }
@@ -84,7 +87,7 @@ export function toObservable<T>(getter: Getter<T>): ObservableLike<T> {
  * @returns A getter for the latest emitted value.
  * @throws {@link SignalError} - When `requireSync` is set and the observable does not emit during subscription.
  */
-export function toSignal<T>(observable: Subscribable<T>, options: ToSignalOptions<T> & { initialValue?: never }): DisposableGetter<T>;
+export function toSignal<T>(observable: Subscribable<T>, options: ObservableToSignalOptions<T> & { initialValue?: never; requireSync: true }): DisposableGetter<T>;
 
 /**
  * Converts an observable to a signal getter.
@@ -98,7 +101,8 @@ export function toSignal<T>(observable: Subscribable<T>, options: ToSignalOption
  * @param options    - Optional conversion behavior overrides without an explicit initial value.
  * @returns A getter for the latest emitted value.
  */
-export function toSignal<T>(observable: Subscribable<T>, options?: ToSignalOptions<T> & { requireSync?: never; initialValue?: never }): DisposableGetter<T | undefined>;
+export function toSignal<T>(observable: Subscribable<T>, options?: ObservableToSignalOptions<T> & { requireSync?: never; initialValue?: never }):
+    DisposableGetter<T | undefined>;
 
 /**
  * Converts an observable to a signal getter.
@@ -113,28 +117,73 @@ export function toSignal<T>(observable: Subscribable<T>, options?: ToSignalOptio
  * @param options    - Optional conversion behavior overrides with an explicit initial value.
  * @returns A getter for the latest emitted value.
  */
-export function toSignal<T, Init>(observable: Subscribable<T>, options: ToSignalOptions<T, Init> & { initialValue: Init; requireSync?: never }):
+export function toSignal<T, Init>(observable: Subscribable<T>, options: ObservableToSignalOptions<T, Init> & { initialValue: Init; requireSync?: never }):
     DisposableGetter<T | Init>;
 
-export function toSignal<T, Init>(observable: Subscribable<T>,
-        { initialValue, requireSync = false, equals = Object.is }: ToSignalOptions<T, Init> = {}):
+/**
+ * Converts a promise to a signal getter.
+ *
+ * The returned getter yields undefined until the promise fulfills. When the promise rejects, the getter throws that failure normalized to an
+ * {@link !Error} on its next read.
+ *
+ * The returned getter can be manually disposed and is additionally registered on the active scope, if there is one. Fulfillment and rejection
+ * are ignored after disposal.
+ *
+ * @param promise - The promise to convert.
+ * @param options - Optional signal behavior overrides without an explicit initial value.
+ * @returns A getter for the fulfilled value or undefined while pending.
+ */
+export function toSignal<T>(promise: Promise<T>,
+    options?: ToSignalOptions<T> & { initialValue?: never }): DisposableGetter<T | undefined>;
+
+/**
+ * Converts a promise to a signal getter with an initial value.
+ *
+ * The returned getter yields the configured initial value until the promise fulfills. When the promise rejects, the getter throws that failure
+ * normalized to an {@link !Error} on its next read.
+ *
+ * The returned getter can be manually disposed and is additionally registered on the active scope, if there is one. Fulfillment and rejection
+ * are ignored after disposal.
+ *
+ * @param promise - The promise to convert.
+ * @param options - Signal behavior overrides with an explicit initial value.
+ * @returns A getter for the fulfilled or initial value.
+ */
+export function toSignal<T, Init>(promise: Promise<T>,
+    options: ToSignalOptions<T, Init> & { initialValue: Init }): DisposableGetter<T | Init>;
+
+export function toSignal<T, Init>(source: Promise<T> | Subscribable<T>,
+        { initialValue, requireSync = false, equals = Object.is }: ObservableToSignalOptions<T, Init> = {}):
         DisposableGetter<T | Init | undefined> {
+    const [ value, setValue ] = createSignal<T | Init>(initialValue as Init, { equals });
     let error: Error | null = null;
     let sawSynchronousValue = false;
-    const [ value, setValue ] = createSignal<T | Init>(initialValue as Init, { equals });
-    const subscription = observable.subscribe(nextValue => {
-        sawSynchronousValue = true;
-        error = null;
-        setValue(nextValue as T | Init);
-    }, nextError => {
-        error = toError(nextError);
-    });
+    let active = true;
+    const updateValue = (nextValue: T): void => {
+        if (active) {
+            sawSynchronousValue = true;
+            error = null;
+            setValue(nextValue as T | Init);
+        }
+    };
+    const updateError = (nextError: unknown): void => {
+        if (active) {
+            error = toError(nextError);
+        }
+    };
+    let subscription: Unsubscribable | null = null;
+    if (source instanceof Promise) {
+        void source.then(updateValue, updateError);
+    } else {
+        subscription = source.subscribe(updateValue, updateError);
+    }
     const dispose = (): void => {
-        subscription.unsubscribe();
+        active = false;
+        subscription?.unsubscribe();
     };
     onDispose(dispose);
 
-    if (requireSync && !sawSynchronousValue) {
+    if (subscription != null && requireSync && !sawSynchronousValue) {
         dispose();
         throw new SignalError("Observable did not emit synchronously");
     }

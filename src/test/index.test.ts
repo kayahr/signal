@@ -14,7 +14,7 @@ import type { Setter } from "../main/Setter.ts";
 import { type ArrayMutator, createArraySignal } from "../main/array.ts";
 import { type CreateEffectOptions, type Effect, type EffectContext, type EffectFunction, createEffect } from "../main/effect.ts";
 import { type CreateMemoOptions, createMemo } from "../main/memo.ts";
-import { type ToSignalOptions, toObservable, toSignal, toSubscriber } from "../main/observable.ts";
+import { type ObservableToSignalOptions, type ToSignalOptions, toObservable, toSignal, toSubscriber } from "../main/interop.ts";
 import { type CreateResourceOptions, type Resource, type ResourceLoader, ResourceStatus, type ResourceStatus as ResourceStatusType, createResource } from "../main/resource.ts";
 import { type CreateSignalOptions, createSignal } from "../main/signal.ts";
 import { untrack } from "../main/untrack.ts";
@@ -53,5 +53,6 @@ describe("index", () => {
         ((): ResourceLoader<number, number> => (({} as exports.ResourceLoader<number, number>)))();
         ((): ResourceStatusType => (({} as exports.ResourceStatus)))();
         ((): ToSignalOptions<number> => ((0 as exports.ToSignalOptions<number>)))();
+        ((): ObservableToSignalOptions<number> => ((0 as exports.ObservableToSignalOptions<number>)))();
     });
 });

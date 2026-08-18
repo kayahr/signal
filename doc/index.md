@@ -6,6 +6,7 @@ children:
   Effects: effects.md
   Array Signals: arrays.md
   Resources: resources.md
+  Promise Interop: promises.md
   Observable Interop: observables.md
 ---
 
@@ -16,4 +17,5 @@ children:
 - [Effects](effects.md)
 - [Array Signals](arrays.md)
 - [Resources](resources.md)
+- [Promise Interop](promises.md)
 - [Observable Interop](observables.md)

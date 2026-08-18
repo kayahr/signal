@@ -19,6 +19,7 @@ Scope management and ownership boundaries are provided by [`@kayahr/scope`](http
 - Synchronous batching and explicit `untrack`
 - Async resources with loading, error, reload and disposal control
 - Array signals without deep array comparisons
+- Promise interop through `toSignal`
 - Observable interop through `toSignal`, `toObservable` and `toSubscriber`
 
 ## Installation
@@ -86,6 +87,7 @@ scope.dispose();
 - [Effects](doc/effects.md)
 - [Array Signals](doc/arrays.md)
 - [Resources](doc/resources.md)
+- [Promise Interop](doc/promises.md)
 - [Observable Interop](doc/observables.md)
 
 [API Doc]: https://kayahr.github.io/signal/
